@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { type ChangeEvent, type DragEvent, useEffect, useMemo, useState } from "react";
 
+import { extractCvTextFromFile, validateCvFile } from "@/lib/extract-cv";
+import { getUploadState } from "@/lib/upload-state";
 import { calculateCompatibilityScore } from "@/lib/scoring";
 import type { AnalysisResult, RequirementStatus } from "@/lib/types";
 
@@ -113,6 +115,8 @@ function MetricIcon({ kind }: { kind: "match" | "time" | "spark" | "trend" }) {
 export function AnalysisDashboard({
   ilan,
   cv,
+  cvFile,
+  setCvFile,
   setIlan,
   setCv,
   loading,
@@ -124,6 +128,8 @@ export function AnalysisDashboard({
 }: {
   ilan: string;
   cv: string;
+  cvFile: File | null;
+  setCvFile: (value: File | null) => void;
   setIlan: (value: string) => void;
   setCv: (value: string) => void;
   loading: boolean;
@@ -136,6 +142,94 @@ export function AnalysisDashboard({
   const [leftCollapsed, setLeftCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<"cv" | "onYazi" | "iskur" | "ozet">("cv");
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [cvMode, setCvMode] = useState<"paste" | "file">("paste");
+  const [cvFileName, setCvFileName] = useState("");
+  const [cvFileMessage, setCvFileMessage] = useState("");
+  const [cvFileError, setCvFileError] = useState("");
+  const [cvLoadingFile, setCvLoadingFile] = useState(false);
+  const [cvDropActive, setCvDropActive] = useState(false);
+
+  const countWords = (value: string) => value.trim().split(/\s+/).filter(Boolean).length;
+
+  async function handleCvFile(file: File) {
+    try {
+      setCvLoadingFile(true);
+      setCvFileError("");
+      setCvFileMessage("");
+      validateCvFile(file);
+      const extracted = await extractCvTextFromFile(file);
+      const wordCount = countWords(extracted);
+      setCvFile(file);
+      setCvFileName(file.name);
+
+      if (getUploadState(wordCount, file.type || file.name) === "metin-hazir") {
+        setCv(extracted);
+        setCvMode("paste");
+        setCvFileMessage(`${file.name} dosyasından ${wordCount} kelime okundu. Lütfen kontrol et.`);
+        return;
+      }
+
+      setCv("");
+      setCvFileError("⚠️ Bu PDF'te seçilebilir metin yok. Şirketlerin ATS sistemleri bu CV'yi okuyamayabilir! CV'ni Word'den 'PDF olarak kaydet' ile yeniden oluşturmanı öneririz.");
+    } catch (error) {
+      setCvFile(null);
+      setCvFileName("");
+      setCvFileError(error instanceof Error ? error.message : "CV dosyası okunamadı.");
+    } finally {
+      setCvLoadingFile(false);
+    }
+  }
+
+  async function handleCvFileSelection(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    await handleCvFile(file);
+    event.target.value = "";
+  }
+
+  async function handleFileDrop(event: DragEvent<HTMLDivElement>) {
+    event.preventDefault();
+    setCvDropActive(false);
+    const file = event.dataTransfer.files?.[0];
+    if (!file) return;
+    await handleCvFile(file);
+  }
+
+  async function handleOcrFromPdf() {
+    if (!cvFile) {
+      setCvFileError("Görüntüden okunacak PDF bulunamadı.");
+      return;
+    }
+
+    try {
+      setCvLoadingFile(true);
+      setCvFileError("");
+
+      const formData = new FormData();
+      formData.append("file", cvFile);
+      const response = await fetch("/api/ocr", {
+        method: "POST",
+        body: formData,
+      });
+
+      const payload = (await response.json()) as { text?: string; error?: string };
+      if (!response.ok || !payload.text) {
+        throw new Error(payload.error ?? "PDF okunamadı.");
+      }
+
+      setCv(payload.text);
+      setCvMode("paste");
+      setCvFileMessage("Metin görüntüden okundu (OCR). Hatalar olabilir, lütfen dikkatlice kontrol et.");
+      setCvFileName(cvFile.name);
+      setCvFile(null);
+    } catch (error) {
+      setCvFile(null);
+      setCvFileName("");
+      setCvFileError(error instanceof Error ? error.message : "PDF görüntüden okunamadı.");
+    } finally {
+      setCvLoadingFile(false);
+    }
+  }
 
   useEffect(() => {
     try {
@@ -296,13 +390,98 @@ export function AnalysisDashboard({
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-[#4B5563] dark:text-slate-300">CV</label>
-              <textarea
-                value={cv}
-                onChange={(event) => setCv(event.target.value)}
-                placeholder="CV metnini buraya yapıştırın..."
-                className="h-52 w-full resize-none rounded-2xl border border-[#EAE4F8] bg-[#F9F7FF] p-3 text-sm leading-6 text-[#1E1B4B] placeholder:text-[#6B7280] outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400 dark:focus:border-violet-500 dark:focus:ring-violet-900/50"
-              />
+              <div className="flex items-center justify-between gap-2">
+                <label className="block text-sm font-semibold text-[#4B5563] dark:text-slate-300">CV</label>
+                <div className="inline-flex overflow-hidden rounded-xl border border-[#EAE4F8] bg-[#F7F5FF] p-0.5 dark:border-slate-700 dark:bg-slate-800">
+                  {(["paste", "file"] as const).map((mode) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => setCvMode(mode)}
+                      className={`rounded-lg px-2.5 py-1 text-xs font-medium transition ${
+                        cvMode === mode
+                          ? "bg-violet-600 text-white shadow-sm"
+                          : "text-[#4B5563] hover:bg-violet-50 dark:text-slate-300 dark:hover:bg-slate-700"
+                      }`}
+                    >
+                      {mode === "paste" ? "Metin yapıştır" : "Dosya yükle"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {cvFileMessage ? (
+                <p className="text-xs text-violet-700 dark:text-violet-300">{cvFileMessage}</p>
+              ) : null}
+
+              {cvMode === "paste" ? (
+                <textarea
+                  value={cv}
+                  onChange={(event) => setCv(event.target.value)}
+                  placeholder="CV metnini buraya yapıştırın..."
+                  className="h-52 w-full resize-none rounded-2xl border border-[#EAE4F8] bg-[#F9F7FF] p-3 text-sm leading-6 text-[#1E1B4B] placeholder:text-[#6B7280] outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400 dark:focus:border-violet-500 dark:focus:ring-violet-900/50"
+                />
+              ) : (
+                <div
+                  onDragOver={(event) => {
+                    event.preventDefault();
+                    setCvDropActive(true);
+                  }}
+                  onDragLeave={() => setCvDropActive(false)}
+                  onDrop={handleFileDrop}
+                  className={`rounded-2xl border border-dashed p-4 text-center ${
+                    cvDropActive
+                      ? "border-violet-400 bg-violet-50 dark:bg-violet-950/30"
+                      : "border-[#EAE4F8] bg-[#F9F7FF] dark:border-slate-600 dark:bg-slate-800"
+                  }`}
+                >
+                  <input
+                    type="file"
+                    accept=".pdf,.docx"
+                    className="hidden"
+                    data-cv-file-input="true"
+                    onChange={handleCvFileSelection}
+                  />
+                  <div className="space-y-3">
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-100 text-violet-600 dark:bg-violet-900/50 dark:text-violet-300">
+                      <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8">
+                        <path d="M12 16V4m0 0 4 4m-4-4-4 4M4 16.5v1A2.5 2.5 0 0 0 6.5 20h11A2.5 2.5 0 0 0 20 17.5v-1" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                    <p className="text-sm text-[#4B5563] dark:text-slate-300">
+                      PDF veya DOCX dosyasını sürükleyip bırakın
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => document.querySelector<HTMLInputElement>('input[data-cv-file-input="true"]')?.click()}
+                      className="inline-flex items-center justify-center rounded-xl bg-violet-600 px-3 py-2 text-sm font-semibold text-white hover:bg-violet-500 disabled:cursor-not-allowed disabled:bg-violet-200 disabled:text-violet-700"
+                    >
+                      Dosya seç
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {cvLoadingFile ? (
+                <div className="rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-sm text-violet-700 dark:border-violet-900 dark:bg-violet-950/40 dark:text-violet-300">
+                  Dosya okunuyor...
+                </div>
+              ) : null}
+
+              {cvFileError ? (
+                <div className="space-y-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+                  <p>{cvFileError}</p>
+                  {cvFileError.includes("Bu PDF'te seçilebilir metin yok") ? (
+                    <button
+                      type="button"
+                      onClick={handleOcrFromPdf}
+                      className="rounded-lg border border-red-200 bg-white px-2.5 py-1.5 font-medium text-red-700 hover:bg-red-50 dark:border-red-800 dark:bg-red-950/30 dark:text-red-200"
+                    >
+                      Görüntüden oku
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
 
             <button

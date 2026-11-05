@@ -9,6 +9,7 @@ import type { AnalysisResult } from "@/lib/types";
 export default function Home() {
   const [ilan, setIlan] = useState("");
   const [cv, setCv] = useState("");
+  const [cvFile, setCvFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [retrying, setRetrying] = useState(false);
   const [error, setError] = useState("");
@@ -55,6 +56,8 @@ export default function Home() {
       <AnalysisDashboard
         ilan={ilan}
         cv={cv}
+        cvFile={cvFile}
+        setCvFile={setCvFile}
         setIlan={setIlan}
         setCv={setCv}
         loading={loading}
