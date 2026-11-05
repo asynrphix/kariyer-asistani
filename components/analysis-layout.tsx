@@ -169,6 +169,16 @@ export function AnalysisDashboard({
     };
   }, [result]);
 
+  const compatibilityMetrics = useMemo(() => {
+    if (!result) return { meaning: 0, keyword: 0 };
+    const { meaning, keyword } = calculateCompatibilityScore({
+      requirements: result.gereksinimler,
+      keywords: result.anahtarKelimeler,
+      cvText: cv,
+    });
+    return { meaning, keyword };
+  }, [cv, result]);
+
   const scoreColor = useMemo(() => {
     const value = result?.uyumPuani ?? 0;
     if (value >= 75) return "text-emerald-600 dark:text-emerald-400";
@@ -189,7 +199,7 @@ export function AnalysisDashboard({
     {
       title: "Uyum Puanı",
       value: result ? `${result.uyumPuani}` : "--",
-      hint: result ? "Anlam: 82 · Anahtar kelime: 80" : "İlan ile CV eşleşmesi",
+      hint: result ? `Anlam: ${compatibilityMetrics.meaning} · Anahtar kelime: ${compatibilityMetrics.keyword}` : "İlan ile CV eşleşmesi",
       tone: "violet" as const,
       icon: "spark" as const,
     },
@@ -355,7 +365,7 @@ export function AnalysisDashboard({
                             </div>
 
                             {card.title === "Uyum Puanı" ? (
-                              <div className="mt-4 flex items-center justify-between gap-4">
+                              <div className="mt-4 flex justify-center">
                                 <CircularProgress
                                   value={result.uyumPuani}
                                   colorClass={
@@ -366,10 +376,6 @@ export function AnalysisDashboard({
                                         : "text-red-500"
                                   }
                                 />
-                                <div>
-                                  <p className={`text-3xl font-black ${scoreColor}`}>{result.uyumPuani}</p>
-                                  <p className="text-xs opacity-70">/ 100</p>
-                                </div>
                               </div>
                             ) : (
                               <>
@@ -400,7 +406,14 @@ export function AnalysisDashboard({
                             <tbody>
                               {result.gereksinimler.map((item, index) => (
                                 <tr key={`${item.madde}-${index}`} className="border-b border-[#F5F3FF] align-top dark:border-slate-800">
-                                  <td className="py-3 pr-4 font-medium text-[#1E1B4B] dark:text-slate-100">{item.madde}</td>
+                                  <td className="py-3 pr-4">
+                                    <div className="flex items-center gap-2">
+                                      <span className="inline-flex rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-violet-700 dark:border-violet-900 dark:bg-violet-950/40 dark:text-violet-300">
+                                        {item.kaynak === "nitelik" ? "Nitelik" : "Görev"}
+                                      </span>
+                                      <span className="font-medium text-[#1E1B4B] dark:text-slate-100">{item.madde}</span>
+                                    </div>
+                                  </td>
                                   <td className="py-3 pr-4 text-[#4B5563] dark:text-slate-300">{item.tur === "zorunlu" ? "Zorunlu" : "Tercih"}</td>
                                   <td className="py-3 pr-4">
                                     <span className={`inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-semibold ${statusStyles[item.durum]}`}>

@@ -1,3 +1,4 @@
+import { textMatchesConcept } from "@/lib/synonyms";
 import type { AnalysisKeyword, AnalysisRequirement } from "@/lib/types";
 
 export function normalizeTurkishText(value: string) {
@@ -37,12 +38,11 @@ export function computeKeywordScore(keywords: AnalysisKeyword[], cvText: string)
     return 0;
   }
 
-  const normalizedCv = normalizeTurkishText(cvText);
   const found = keywords.filter((keyword) => {
     const normalizedKey = normalizeTurkishText(keyword.kelime);
     if (!normalizedKey) return false;
-    if (!normalizedCv) return false;
-    return normalizedCv.includes(normalizedKey);
+    if (!cvText) return false;
+    return textMatchesConcept(cvText, normalizedKey);
   }).length;
 
   return Math.round((found / total) * 100);
