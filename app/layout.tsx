@@ -18,11 +18,27 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
+  const themeScript = `
+    (function() {
+      try {
+        const saved = localStorage.getItem('career-theme');
+        const shouldUseDark = saved === 'dark';
+        document.documentElement.classList.toggle('dark', shouldUseDark);
+      } catch (e) {
+        document.documentElement.classList.remove('dark');
+      }
+    })();
+  `;
+
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
