@@ -1,0 +1,101 @@
+
+Türkiye İş Kurumu	Ekranı Yazdır
+İş İlan No (00009879345)
+
+ 	 	 
+  Türkiye İş Kurumu	
+	
+ÇANKAYA HİZMET MERKEZİ
+ 	 	 
+MENTOR4B MENTORING REHBERLIK HİZMETLERİ ANONİM ŞİRKETİ
+ 	Yayınlanma Tarihi: 29.10.2026	
+ Görüntülenme Sayısı	1104	 Başvuru Sayısı	99	 Çalışma Şekli	Tam Zamanlı
+ Son Başvuru Tarihi	26.11.2026	 İşveren Statüsü	Özel	 Pozisyon	10
+İş Tanımı
+ 
+Yapay Zekâ Destekli Yazılım Geliştiricisi (Agentic AI Developer)
+
+Şirketimizin geliştirdiği yazılım, yapay zekâ ve endüstriyel dijital dönüşüm projelerinde görev alacak; yapay zekâ destekli geliştirme araçlarını etkin kullanabilen, yeni nesil agentic coding yöntemleriyle yazılım üretebilen takım arkadaşı arıyoruz.
+
+Görev ve Sorumluluklar:
+
+ChatGPT,  Claude Code, OpenAI Codex, Cursor ve benzeri AI destekli yazılım geliştirme araçlarını kullanarak uygulamalar geliştirmek.
+
+Büyük dil modelleri (LLM) ve AI agent teknolojilerini mevcut yazılım ürünlerine entegre etmek.
+
+Tekrarlanan iş süreçlerini otomatikleştiren yapay zekâ ajanları ve yazılım çözümleri geliştirmek.
+
+İş süreçlerini analiz ederek yazılımların gerçek üretim ortamlarına uyarlanmasında görev almak.
+
+API entegrasyonları, veri işleme, test ve hata giderme süreçlerini yürütmek.
+
+Yapay zekâ tarafından üretilen kodların doğruluğunu, güvenliğini ve sürdürülebilirliğini kontrol etmek.
+
+Yeni yapay zekâ teknolojilerini araştırarak uygulanabilir çözümler geliştirmek.
+
+Analitik düşünme becerisine sahip, yeni teknolojileri hızla öğrenebilen, yapay zekâyı etkin bir yazılım geliştirme aracı olarak kullanabilen ve gerektiğinde müşteri sahalarında çalışabilecek adayların başvurularını bekliyoruz.
+
+  
+ 
+Nitelik ve Beceriler
+ 
+Yazılım geliştirmeye ve yapay zekâ teknolojilerine ilgi duyan,
+
+Python, JavaScript veya benzeri programlama dillerinden en az birine temel düzeyde hâkim,
+
+ChatGPT, Claude, Cursor, Codex veya benzeri yapay zekâ araçlarını kullanabilen ya da öğrenmeye istekli,
+
+Yapay zekâ destekli kodlama (Agentic Coding) konusunda kendini geliştirmek isteyen,
+
+Analitik düşünme ve problem çözme becerisine sahip,
+
+Araştırmayı, öğrenmeyi ve yeni teknolojileri takip etmeyi seven,
+
+Takım çalışmasına yatkın, iletişim becerileri güçlü,
+
+ 
+Meslek Bilgileri
+Meslek	Deneyim
+Yapay Zeka Programcısı	Yıl   1
+Öğrenim ve Kişisel Bilgiler
+Öğrenim
+En Az Öğrenim Seviyesi	:	İlkokul
+En Fazla Öğrenim Seviyesi	:	Doktora
+Cinsiyet	Yaş
+Kadın	-
+Erkek	-
+
+Çalışma Adresi Bilgisi
+Çalışma Adresi	:	ODTÜ BİLİŞİM VE İNOVASYON MERKEZİ MUSTAFA KEMAL MAHALLESİ DUMLUPINAR BULVARI ANKARA ÇANKAYA
+ÇANKAYA
+ANKARA / TÜRKİYE
+İrtibat Bilgileri		
+Ad Soyad	:	MEHMET ÇAVUŞ
+Ünvan	:	Müdür
+Telefon	:	905323310603
+E-posta	:	mehmet.cavus@mentor4b.com
+Ücret ve Diğer Bilgiler
+ 
+İş ilanında aranan şartların tamamını taşıdığımı, aksi takdirde sorumluluğun tarafıma ait olacağını, ilan şartlarını taşımıyor olmama rağmen beyanım nedeniyle işverene gönderilmek üzere oluşturulan nihai aday listesine girmiş olmam halinde Kurumun nihai aday listesinden çıkartma yetkisi bulunduğunu kabul/taahhüt ederim.
+
+
+Önyazı Ekleme
+
+
+Başvur
+İşe Başvuru Detayı
+UYARILAR
+İŞSİZLİK ÖDENEĞİ ALIYORSANIZ DİKKAT!
+
+1. Haklı bir nedene dayanmaksızın belirtilen tarihe kadar yapılan çağrıya cevap vermeyen veya görüşmeye gitmeyenlerin işsizlik ödeneği kesilmektedir.
+2. Önerilen işi haklı bir nedene dayanmaksızın reddedenlerin ödeneği kesilmekte tekrar başlatılmamaktadır.
+SOSYAL YARDIM YARARLANICILARININ DİKKATİNE!
+
+1. Haklı bir nedene dayanmaksızın belirtilen tarihe kadar önerilecek işe / programa yönlendirilmek üzere yapılan çağrıya cevap vermeyen veya çağrı sonrasında görüşmeye gitmeyenlerin, bu durumun üçüncü kez tekrarı halinde nakdî düzenli sosyal yardımları bir yıl süreyle kesilecektir.
+2. Önerilen işi / programı haklı bir nedene dayanmaksızın üçüncü kez reddedenlerin nakdî düzenli sosyal yardımları bir yıl süreyle kesilecektir.
+
+
+*	Kamu taleplerine başvuru yaparken sitemize üyelik başvurusu sırasında beyan ettiğiniz adres ile Adres Kayıt Sisteminde yer alan adresiniz farklı ise Adres Kayıt Sistemindeki adresiniz dikkate alınacaktır.
+
+İlanla İlgili Geri Bildirim Ver
+Türkiye İş Kurumu © 2026
