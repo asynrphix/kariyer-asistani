@@ -44,4 +44,5 @@ export interface AnalysisResult {
   onYazi: string;
   iskurProfilOnerileri?: string[];
   ilanOzeti?: IskurSummary;
+  cached?: boolean;
 }

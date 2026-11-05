@@ -1,10 +1,11 @@
 export const SYNONYM_GROUPS = [
-  ["ai agent", "yapay zeka ajani", "agent", "ajan"],
+  ["ai agent", "yapay zeka ajanı", "yapay zeka ajani", "agent", "ajan"],
   ["yapay zeka", "ai", "artificial intelligence", "yapay zekâ"],
-  ["test", "testing", "test etme", "test yazimi"],
-  ["hata ayiklama", "debugging", "debug", "debug etme"],
+  ["test", "testing", "unit test", "birim test", "test etme", "test yazımı"],
+  ["hata ayıklama", "debugging", "debug", "debug etme"],
   ["api entegrasyonu", "api integration", "api", "entegrasyon"],
-  ["veri isleme", "data processing", "veri analizi"],
+  ["veri işleme", "veri isleme", "data processing", "veri analizi"],
+  ["llm", "büyük dil modeli", "buyuk dil modeli", "large language model"],
 ] as const;
 
 export function normalizeSynonymText(value: string) {
@@ -26,7 +27,10 @@ export function getSynonymVariants(value: string): string[] {
   const variants = new Set<string>(target ? [target] : []);
 
   for (const group of SYNONYM_GROUPS) {
-    const normalizedGroup = group.map((entry) => normalizeSynonymText(entry));
+    const normalizedGroup = group
+      .map((entry) => normalizeSynonymText(entry))
+      .filter(Boolean);
+
     const groupHasMatch = normalizedGroup.some((entry) => {
       if (!entry) return false;
       return entry === target || entry.includes(target) || target.includes(entry);
@@ -34,7 +38,7 @@ export function getSynonymVariants(value: string): string[] {
 
     if (!groupHasMatch) continue;
 
-    normalizedGroup.filter(Boolean).forEach((entry) => variants.add(entry));
+    normalizedGroup.forEach((entry) => variants.add(entry));
   }
 
   return Array.from(variants).filter(Boolean);

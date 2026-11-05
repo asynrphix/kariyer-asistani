@@ -56,8 +56,12 @@ export async function POST(request: Request) {
       );
     }
 
-    const model = process.env.GEMINI_MODEL ?? "gemini-flash-latest";
-    const fallbackModel = process.env.GEMINI_FALLBACK_MODEL ?? "gemini-flash-lite-latest";
+    const model = process.env.GEMINI_MODEL;
+    if (!model) {
+      throw new Error("GEMINI_MODEL ortam değişkeni tanımlı değil. Lütfen .env.local içinde tanımlayın.");
+    }
+
+    const fallbackModel = process.env.GEMINI_FALLBACK_MODEL;
     const ai = new GoogleGenAI({ apiKey });
     const safeCv = sanitizeCvForModel(cv);
     const today = new Date().toLocaleDateString("tr-TR", {
@@ -98,19 +102,42 @@ ${conversationText}`;
       },
       fallbackModel,
       stream: true,
+      timeoutMs: 20000,
+      totalTimeoutMs: 60000,
     })) as AsyncIterable<{ text?: string }>;
 
     return new NextResponse(
       new ReadableStream({
         async start(controller) {
           const encoder = new TextEncoder();
+          let receivedAnyChunk = false;
 
           try {
-            for await (const chunk of streamResponse) {
-              const text = chunk.text ?? "";
+            const iterator = (streamResponse as AsyncIterable<{ text?: string }>)[Symbol.asyncIterator]();
+            const timeoutMs = 20000;
+
+            while (true) {
+              const nextChunk = Promise.race([
+                iterator.next(),
+                new Promise<never>((_, reject) => {
+                  setTimeout(() => reject(new GeminiRequestError("İstek zaman aşımına uğradı, lütfen tekrar deneyin.", 504, "TIMEOUT")), timeoutMs);
+                }),
+              ]);
+
+              const result = await nextChunk;
+              if (result.done) {
+                break;
+              }
+
+              const text = result.value?.text ?? "";
               if (text) {
+                receivedAnyChunk = true;
                 controller.enqueue(encoder.encode(text));
               }
+            }
+
+            if (!receivedAnyChunk) {
+              controller.enqueue(encoder.encode("İstek zaman aşımına uğradı, lütfen tekrar deneyin."));
             }
           } catch (error) {
             const message =

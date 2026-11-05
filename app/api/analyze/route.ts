@@ -1,3 +1,5 @@
+import crypto from "node:crypto";
+
 import { GoogleGenAI } from "@google/genai";
 import { NextResponse } from "next/server";
 
@@ -6,6 +8,12 @@ import { getIskurGeminiText, parseIskurIlan } from "@/lib/iskur";
 import { enforceConsistency } from "@/lib/consistency";
 import { calculateCompatibilityScore } from "@/lib/scoring";
 import type { AnalysisResult, AnalysisRequirement } from "@/lib/types";
+
+const analysisCache = new Map<string, { expiresAt: number; result: AnalysisResult }>();
+
+function getCacheKey(ilan: string, cv: string) {
+  return crypto.createHash("sha256").update(`${ilan}\n---\n${cv}`).digest("hex");
+}
 
 const analysisSchema = {
   type: "OBJECT",
@@ -123,11 +131,25 @@ export async function POST(request: Request) {
       );
     }
 
-    const primaryModel = process.env.GEMINI_MODEL ?? "gemini-flash-latest";
-    const fallbackModel = process.env.GEMINI_FALLBACK_MODEL ?? "gemini-flash-lite-latest";
+    const primaryModel = process.env.GEMINI_MODEL;
+    if (!primaryModel) {
+      throw new Error("GEMINI_MODEL ortam değişkeni tanımlı değil. Lütfen .env.local içinde tanımlayın.");
+    }
+
+    const fallbackModel = process.env.GEMINI_FALLBACK_MODEL;
     const ai = new GoogleGenAI({ apiKey });
     const iskurIlan = parseIskurIlan(ilan);
     const geminiIlanMetni = iskurIlan ? getIskurGeminiText(ilan) : ilan;
+    const cacheKey = getCacheKey(ilan, cv);
+    const cachedEntry = analysisCache.get(cacheKey);
+
+    if (cachedEntry && cachedEntry.expiresAt > Date.now()) {
+      return NextResponse.json({ ...cachedEntry.result, cached: true }, { status: 200 });
+    }
+
+    if (cachedEntry) {
+      analysisCache.delete(cacheKey);
+    }
 
     const today = new Date().toLocaleDateString("tr-TR", {
       day: "2-digit",
@@ -148,6 +170,8 @@ export async function POST(request: Request) {
         temperature: 0.2,
       },
       fallbackModel,
+      timeoutMs: 30000,
+      totalTimeoutMs: 60000,
     })) as { text?: string };
 
     const rawText = response.text ?? "";
@@ -189,6 +213,7 @@ export async function POST(request: Request) {
 
     const payload: AnalysisResult = {
       ...normalized,
+      cached: false,
       iskurProfilOnerileri: iskurProfilOnerileri.length > 0 ? iskurProfilOnerileri : undefined,
       ilanOzeti: iskurIlan
         ? {
@@ -198,6 +223,11 @@ export async function POST(request: Request) {
           }
         : undefined,
     };
+
+    analysisCache.set(cacheKey, {
+      expiresAt: Date.now() + 60 * 60 * 1000,
+      result: payload,
+    });
 
     return NextResponse.json(payload, { status: 200 });
   } catch (error) {

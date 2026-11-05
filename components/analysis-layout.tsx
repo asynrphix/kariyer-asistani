@@ -352,6 +352,13 @@ export function AnalysisDashboard({
               ) : (
                 result && (
                   <div className="space-y-6">
+                    {result.cached ? (
+                      <div className="flex justify-end">
+                        <span className="inline-flex items-center rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-violet-700 dark:border-violet-900 dark:bg-violet-950/40 dark:text-violet-300">
+                          Önbellekten
+                        </span>
+                      </div>
+                    ) : null}
                     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                       {summaryCards.map((card) => {
                         const palette = cardPalette[card.tone];
