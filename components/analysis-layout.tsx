@@ -5,6 +5,7 @@ import { type ChangeEvent, type DragEvent, useEffect, useMemo, useState } from "
 import { extractCvTextFromFile, validateCvFile } from "@/lib/extract-cv";
 import { getUploadState } from "@/lib/upload-state";
 import { calculateCompatibilityScore } from "@/lib/scoring";
+import type { AnalysisHistoryEntry } from "@/lib/storage";
 import type { AnalysisResult, RequirementStatus } from "@/lib/types";
 
 const statusStyles: Record<RequirementStatus, string> = {
@@ -119,6 +120,13 @@ export function AnalysisDashboard({
   setCvFile,
   setIlan,
   setCv,
+  rememberCv,
+  setRememberCv,
+  historyEntries,
+  onRestoreHistory,
+  onDeleteHistory,
+  onDeleteAllHistory,
+  onExportHistory,
   loading,
   retrying,
   error,
@@ -132,6 +140,13 @@ export function AnalysisDashboard({
   setCvFile: (value: File | null) => void;
   setIlan: (value: string) => void;
   setCv: (value: string) => void;
+  rememberCv: boolean;
+  setRememberCv: (value: boolean) => void;
+  historyEntries: AnalysisHistoryEntry[];
+  onRestoreHistory: (entry: AnalysisHistoryEntry) => void;
+  onDeleteHistory: (id: string) => void;
+  onDeleteAllHistory: () => void;
+  onExportHistory: () => void;
   loading: boolean;
   retrying: boolean;
   error: string;
@@ -140,6 +155,8 @@ export function AnalysisDashboard({
   onCopySummary: () => Promise<void> | void;
 }) {
   const [leftCollapsed, setLeftCollapsed] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [pendingDeleteAll, setPendingDeleteAll] = useState(false);
   const [activeTab, setActiveTab] = useState<"cv" | "onYazi" | "iskur" | "ozet">("cv");
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [cvMode, setCvMode] = useState<"paste" | "file">("paste");
@@ -364,7 +381,16 @@ export function AnalysisDashboard({
           <div className="flex items-center justify-between border-b border-[#F0EBFA] px-4 py-4 dark:border-slate-700">
             <div className={`${leftCollapsed ? "hidden" : "block"}`}>
               <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-violet-600">Kariyer Asistanı</p>
-              <h1 className="mt-2 text-2xl font-bold text-[#1E1B4B] dark:text-slate-100">İlan–CV Uyum</h1>
+              <div className="mt-2 flex items-center gap-2">
+                <h1 className="text-2xl font-bold text-[#1E1B4B] dark:text-slate-100">İlan–CV Uyum</h1>
+                <button
+                  type="button"
+                  onClick={() => setShowHistory((prev) => !prev)}
+                  className="rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-violet-700 transition hover:bg-violet-100 dark:border-violet-900 dark:bg-violet-950/40 dark:text-violet-200"
+                >
+                  Geçmiş
+                </button>
+              </div>
             </div>
             {result ? (
               <button
@@ -377,6 +403,98 @@ export function AnalysisDashboard({
               </button>
             ) : null}
           </div>
+
+          {!leftCollapsed && showHistory ? (
+            <div className="border-b border-[#F0EBFA] bg-[#F9F7FF] p-4 dark:border-slate-700 dark:bg-slate-800/80">
+              <div className="mb-3 rounded-xl border border-violet-100 bg-white px-2.5 py-2 text-[11px] text-violet-700 dark:border-violet-900 dark:bg-slate-900 dark:text-violet-200">
+                🔒 Geçmişin sadece bu tarayıcıda saklanır, sunucumuza gönderilmez.
+              </div>
+
+              <div className="max-h-72 space-y-2 overflow-y-auto">
+                {historyEntries.length === 0 ? (
+                  <p className="text-sm text-[#4B5563] dark:text-slate-300">Henüz kayıt yok.</p>
+                ) : (
+                  historyEntries.map((entry) => (
+                    <div key={entry.id} className="flex items-center gap-2 rounded-xl border border-[#EAE4F8] bg-white p-2 dark:border-slate-700 dark:bg-slate-900">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onRestoreHistory(entry);
+                          setShowHistory(false);
+                        }}
+                        className="flex min-w-0 flex-1 items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left hover:bg-violet-50 dark:hover:bg-slate-800"
+                      >
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-semibold text-[#1E1B4B] dark:text-slate-100">
+                            {entry.firma ?? entry.baslik}
+                          </span>
+                          <span className="block text-[11px] text-[#4B5563] dark:text-slate-400">
+                            {new Date(entry.date).toLocaleDateString("tr-TR")}
+                          </span>
+                        </span>
+                        <span className={`inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-[11px] font-bold ${entry.puan >= 75 ? "bg-emerald-100 text-emerald-700" : entry.puan >= 50 ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}>
+                          {entry.puan}
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="Kaydı sil"
+                        onClick={() => onDeleteHistory(entry.id)}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="mt-3 flex gap-2">
+                <button
+                  type="button"
+                  onClick={onExportHistory}
+                  className="flex-1 rounded-xl border border-violet-200 bg-white px-2.5 py-2 text-xs font-semibold text-violet-700 hover:bg-violet-50 dark:border-violet-900 dark:bg-slate-900 dark:text-violet-200"
+                >
+                  Verilerimi dışa aktar
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPendingDeleteAll(true)}
+                  className="flex-1 rounded-xl border border-red-200 bg-red-50 px-2.5 py-2 text-xs font-semibold text-red-700 hover:bg-red-100 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200"
+                >
+                  Tüm verilerimi sil
+                </button>
+              </div>
+            </div>
+          ) : null}
+
+          {pendingDeleteAll ? (
+            <div className="border-b border-[#F0EBFA] bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/30">
+              <p className="text-sm font-medium text-red-700 dark:text-red-200">
+                Tüm analiz geçmişin ve kayıtlı CV'n bu tarayıcıdan silinecek. Bu işlem geri alınamaz.
+              </p>
+              <div className="mt-3 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onDeleteAllHistory();
+                    setPendingDeleteAll(false);
+                  }}
+                  className="flex-1 rounded-xl bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-500"
+                >
+                  Sil
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPendingDeleteAll(false)}
+                  className="flex-1 rounded-xl border border-red-200 bg-white px-3 py-2 text-sm font-semibold text-red-700 dark:border-red-800 dark:bg-slate-900 dark:text-red-200"
+                >
+                  İptal
+                </button>
+              </div>
+            </div>
+          ) : null}
 
           <div className={`flex-1 space-y-5 overflow-y-auto p-4 ${leftCollapsed ? "hidden" : "block"}`}>
             <div className="space-y-2">
@@ -413,6 +531,16 @@ export function AnalysisDashboard({
               {cvFileMessage ? (
                 <p className="text-xs text-violet-700 dark:text-violet-300">{cvFileMessage}</p>
               ) : null}
+
+              <label className="mt-2 flex items-center gap-2 text-xs text-[#4B5563] dark:text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={rememberCv}
+                  onChange={(event) => setRememberCv(event.target.checked)}
+                  className="h-4 w-4 rounded border-[#D9D3EE] text-violet-600 focus:ring-violet-500"
+                />
+                CV'mi bu tarayıcıda hatırla
+              </label>
 
               {cvMode === "paste" ? (
                 <textarea
