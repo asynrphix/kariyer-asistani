@@ -61,6 +61,7 @@ export async function generateWithRetry({
   config,
   fallbackModel,
   maxRetries = 3,
+  stream = false,
 }: {
   ai: GoogleGenAI;
   model: string;
@@ -68,6 +69,7 @@ export async function generateWithRetry({
   config: Record<string, unknown>;
   fallbackModel?: string;
   maxRetries?: number;
+  stream?: boolean;
 }) {
   const attempts = [model];
   if (fallbackModel && fallbackModel !== model) {
@@ -79,6 +81,14 @@ export async function generateWithRetry({
   for (const candidateModel of attempts) {
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
+        if (stream) {
+          return await ai.models.generateContentStream({
+            model: candidateModel,
+            contents,
+            config,
+          });
+        }
+
         return await ai.models.generateContent({
           model: candidateModel,
           contents,

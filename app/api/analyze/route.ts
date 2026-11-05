@@ -120,7 +120,7 @@ export async function POST(request: Request) {
 
     const systemInstruction = `Sen bir kariyer danışmanısın. Sadece CV'de gerçekten yazan bilgileri kullan. Kesinlikle deneyim, beceri veya tarih uydurma. Önerilen CV maddeleri yalnızca CV'deki mevcut deneyimleri ilanın diline göre yeniden ifade etmeli. CV'de olmayan bir şeyi "yok" olarak işaretle. Sonuç JSON formatında olmalı. onYazi en fazla 120 kelime olmalı ve Türkçe yazılmalıdır. Gereksinimler listesinde her madde için tur değerleri sadece "zorunlu" veya "tercih" olmalı; durum sadece "var", "kismen" veya "yok" olmalı.`;
 
-    const response = await generateWithRetry({
+    const response = (await generateWithRetry({
       ai,
       model: primaryModel,
       contents: `İLAN:\n${geminiIlanMetni}\n\nCV:\n${cv}`,
@@ -131,7 +131,7 @@ export async function POST(request: Request) {
         temperature: 0.2,
       },
       fallbackModel,
-    });
+    })) as { text?: string };
 
     const rawText = response.text ?? "";
     const cleanJsonText = rawText
