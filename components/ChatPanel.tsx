@@ -10,6 +10,8 @@ type ChatMessage = {
   id: string;
   role: ChatRole;
   content: string;
+  error?: string;
+  retryPrompt?: string;
 };
 
 const quickQuestions = [
@@ -110,13 +112,13 @@ export function ChatPanel({
     };
 
     const conversation = [...messages, userMessage];
-    setMessages(conversation);
+    setMessages((previous) => [...previous, userMessage]);
     setInput("");
     setIsSending(true);
     setIsTyping(true);
 
     const assistantId = `${Date.now()}-assistant`;
-    setMessages((previous) => [...previous, { id: assistantId, role: "assistant", content: "" }]);
+    setMessages((previous) => [...previous, { id: assistantId, role: "assistant", content: "", retryPrompt: trimmed }]);
 
     try {
       const response = await fetch("/api/chat", {
@@ -145,16 +147,32 @@ export function ChatPanel({
       const decoder = new TextDecoder();
       let received = "";
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        received += decoder.decode(value, { stream: true });
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          received += decoder.decode(value, { stream: true });
 
+          setMessages((previous) =>
+            previous.map((message) =>
+              message.id === assistantId ? { ...message, content: received } : message,
+            ),
+          );
+        }
+      } catch (streamError) {
         setMessages((previous) =>
           previous.map((message) =>
-            message.id === assistantId ? { ...message, content: received } : message,
+            message.id === assistantId
+              ? {
+                  ...message,
+                  content: received,
+                  error: "Cevap akışı yarıda kesildi. Lütfen tekrar deneyin.",
+                  retryPrompt: trimmed,
+                }
+              : message,
           ),
         );
+        return;
       }
     } catch (error) {
       setMessages((previous) =>
@@ -162,10 +180,9 @@ export function ChatPanel({
           message.id === assistantId
             ? {
                 ...message,
-                content:
-                  error instanceof Error
-                    ? error.message
-                    : "Asistan cevap üretirken bir hata oluştu.",
+                content: "",
+                error: error instanceof Error ? error.message : "Cevap akışı yarıda kesildi. Lütfen tekrar deneyin.",
+                retryPrompt: trimmed,
               }
             : message,
         ),
@@ -246,12 +263,33 @@ export function ChatPanel({
                             : "border-[#EAE4F8] bg-white text-[#1E1B4B] dark:border-slate-700 dark:bg-[#201B35] dark:text-slate-100"
                         }`}
                       >
+                        {message.role === "assistant" && message.error ? (
+                          <div className="mb-2 rounded-xl border border-amber-200 bg-amber-50 p-2 text-[11px] font-medium text-amber-700 dark:border-amber-900/70 dark:bg-amber-950/30 dark:text-amber-300">
+                            ⚠️ Cevap yarıda kesildi
+                          </div>
+                        ) : null}
+
                         <div
                           className="prose prose-sm max-w-none [&_strong]:font-semibold [&_ul]:my-2 [&_li]:ml-2"
                           dangerouslySetInnerHTML={{ __html: renderMarkdown(message.content || "...") }}
                         />
 
-                        {message.role === "assistant" && message.content ? (
+                        {message.role === "assistant" && message.error ? (
+                          <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-2 text-[11px] text-red-700 dark:border-red-900/70 dark:bg-red-950/30 dark:text-red-300">
+                            <div className="mb-2 font-medium">{message.error}</div>
+                            {message.retryPrompt ? (
+                              <button
+                                type="button"
+                                onClick={() => handleSend(message.retryPrompt)}
+                                className="rounded-lg bg-red-600 px-2 py-1 text-[10px] font-semibold text-white transition hover:bg-red-500"
+                              >
+                                Tekrar dene
+                              </button>
+                            ) : null}
+                          </div>
+                        ) : null}
+
+                        {message.role === "assistant" && message.content && !message.error ? (
                           <button
                             type="button"
                             onClick={() => navigator.clipboard.writeText(message.content)}

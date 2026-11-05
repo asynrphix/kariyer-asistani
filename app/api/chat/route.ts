@@ -66,7 +66,7 @@ export async function POST(request: Request) {
       year: "numeric",
     });
 
-    const systemInstruction = `Sen bu kullanıcının kariyer asistanısın. Aşağıdaki ilanı, CV'yi ve analiz sonucunu biliyorsun. Sadece CV'de gerçekten yazan bilgileri kullan; deneyim, beceri, tarih veya rakam UYDURMA. CV'de olmayan bir şeyi yazman gerekirse bunu açıkça belirt ve kullanıcıya sor. Kariyer, bu başvuru ve iş arama dışındaki konulara kibarca geri dön. Bugünün tarihi: ${today}. Cevapların kısa, net ve Türkçe olsun.`;
+    const systemInstruction = `Sen bu kullanıcının kariyer asistanısın. Aşağıdaki ilanı, CV'yi ve analiz sonucunu biliyorsun. Sadece CV'de gerçekten yazan bilgileri kullan; deneyim, beceri, tarih veya rakam UYDURMA. Kullanıcının sohbette kendisi açıkça belirttiği deneyim ve becerileri kullanabilirsin; bunları kullandığında cevabın sonunda "📝 Bu bilgileri sohbette sen belirttin, CV'ne de eklemeyi unutma." notunu ekle. Kullanıcının belirtmediği hiçbir bilgiyi uydurma. CV'de olmayan bir şeyi yazman gerekirse bunu açıkça belirt ve kullanıcıya sor. Kariyer, bu başvuru ve iş arama dışındaki konulara kibarca geri dön. Bugünün tarihi: ${today}. Cevapların kısa, net ve Türkçe olsun.`;
 
     const evidenceText = JSON.stringify(
       {

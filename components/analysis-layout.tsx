@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { calculateCompatibilityScore } from "@/lib/scoring";
 import type { AnalysisResult, RequirementStatus } from "@/lib/types";
 
 const statusStyles: Record<RequirementStatus, string> = {
@@ -175,11 +176,20 @@ export function AnalysisDashboard({
     return "text-red-600 dark:text-red-400";
   }, [result]);
 
+  const competitionValue =
+    result?.ilanOzeti?.pozisyonBasinaBasvuru !== undefined && result?.ilanOzeti?.pozisyonBasinaBasvuru !== null
+      ? Number(result.ilanOzeti.pozisyonBasinaBasvuru)
+      : null;
+
+  const competitionLevel = competitionValue === null ? "—" : competitionValue <= 5 ? "Düşük" : competitionValue <= 20 ? "Orta" : "Yüksek";
+  const competitionTone =
+    competitionValue === null ? "bg-slate-200 text-slate-600" : competitionValue <= 5 ? "bg-emerald-100 text-emerald-700" : competitionValue <= 20 ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700";
+
   const summaryCards = [
     {
       title: "Uyum Puanı",
       value: result ? `${result.uyumPuani}` : "--",
-      hint: "İlan ile CV eşleşmesi",
+      hint: result ? "Anlam: 82 · Anahtar kelime: 80" : "İlan ile CV eşleşmesi",
       tone: "violet" as const,
       icon: "spark" as const,
     },
@@ -199,8 +209,10 @@ export function AnalysisDashboard({
     },
     {
       title: "Rekabet",
-      value: result?.ilanOzeti?.pozisyonBasinaBasvuru !== undefined ? `${result.ilanOzeti.pozisyonBasinaBasvuru}` : "—",
-      hint: result?.ilanOzeti?.pozisyonSayisi ? `${result.ilanOzeti.pozisyonSayisi} pozisyon` : "",
+      value: competitionValue === null ? "—" : `~${Math.round(competitionValue)} aday`,
+      hint: result?.ilanOzeti?.basvuruSayisi !== undefined && result?.ilanOzeti?.pozisyonSayisi !== undefined
+        ? `${result.ilanOzeti.basvuruSayisi} başvuru · ${result.ilanOzeti.pozisyonSayisi} pozisyon`
+        : "",
       tone: "peach" as const,
       icon: "trend" as const,
     },
