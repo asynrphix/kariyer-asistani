@@ -33,7 +33,12 @@ export default function PrivacyPage() {
         </div>
 
         <Bolum baslik="Hesap, çerez ve izleme">
-          <p>Kayıt veya giriş yok. Çerez, reklam ya da analitik/izleme aracı kullanılmaz.</p>
+                    <p>Kayıt veya giriş yok. Çerez veya reklam aracı kullanılmaz.</p>
+          <p>
+            Sitenin kaç kez ziyaret edildiğini görmek için çerez kullanmayan Vercel Web Analytics kullanılır. Bu araç
+            hangi sayfanın görüntülendiği, ülke, tarayıcı ve cihaz türü gibi anonim istatistikler toplar; seni kişi olarak
+            tanımlamaz. CV ve ilan metnin bu istatistiklere dahil edilmez.
+          </p>
         </Bolum>
 
         <Bolum baslik="Analiz sırasında ne gönderilir?">

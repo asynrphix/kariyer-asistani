@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
-
+import { Analytics } from "@vercel/analytics/next";
 import { SiteFooter } from "@/components/site-footer";
 import "./globals.css";
 
@@ -62,6 +62,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Script id="theme-script" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: themeScript }} />
         {children}
         <SiteFooter />
+          <Analytics />
       </body>
     </html>
   );

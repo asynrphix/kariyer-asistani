@@ -17,6 +17,7 @@
     "@google/genai": "^2.32.0",
     "@upstash/ratelimit": "^2.2.0",
     "@upstash/redis": "^1.41.0",
+    "@vercel/analytics": "^2.0.1",
     "mammoth": "^1.13.0",
     "next": "16.4.5",
     "pdfjs-dist": "^6.5.438",
@@ -25,7 +26,7 @@
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",
-    "@types/node": "^20",
+    "@types/node": "^24.19.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
@@ -33,6 +34,7 @@
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5",
-    "vitest": "^1.6.0"
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0"
   }
 }
