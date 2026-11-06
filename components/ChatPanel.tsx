@@ -159,7 +159,7 @@ export function ChatPanel({
             ),
           );
         }
-      } catch (streamError) {
+      } catch {
         setMessages((previous) =>
           previous.map((message) =>
             message.id === assistantId

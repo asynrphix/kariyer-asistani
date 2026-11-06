@@ -8,25 +8,16 @@ import { addHistoryEntry, clearHistory, clearRememberedCv, exportHistoryToJson, 
 import type { AnalysisResult } from "@/lib/types";
 
 export default function Home() {
+  const rememberedCv = getRememberedCv();
   const [ilan, setIlan] = useState("");
-  const [cv, setCv] = useState("");
-  const [rememberCv, setRememberCv] = useState(false);
-  const [history, setHistory] = useState<AnalysisHistoryEntry[]>([]);
+  const [cv, setCv] = useState(() => rememberedCv);
+  const [rememberCv, setRememberCv] = useState(() => Boolean(rememberedCv));
+  const [history, setHistory] = useState<AnalysisHistoryEntry[]>(() => getHistoryEntries());
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [retrying, setRetrying] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<AnalysisResult | null>(null);
-
-  useEffect(() => {
-    const savedCv = getRememberedCv();
-    setRememberCv(Boolean(savedCv));
-    if (savedCv) {
-      setCv(savedCv);
-    }
-
-    setHistory(getHistoryEntries());
-  }, []);
 
   useEffect(() => {
     if (rememberCv) {
@@ -94,7 +85,7 @@ export default function Home() {
   }
 
   function handleDeleteHistory(id: string) {
-    setHistory((current) => removeHistoryEntry(id));
+    setHistory(() => removeHistoryEntry(id));
   }
 
   function handleDeleteAllHistory() {

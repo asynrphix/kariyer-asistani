@@ -169,7 +169,7 @@ export async function generateWithRetry({
 }: {
   ai: GoogleGenAI;
   model: string;
-  contents: string;
+  contents: unknown;
   config: Record<string, unknown>;
   fallbackModel?: string;
   maxRetries?: number;
@@ -205,12 +205,17 @@ export async function generateWithRetry({
       const startedAt = Date.now();
 
       try {
-        const request = stream
-          ? ai.models.generateContentStream({ model: candidateModel, contents, config })
-          : ai.models.generateContent({ model: candidateModel, contents, config });
+        type GenerateConfig = Parameters<typeof ai.models.generateContent>[0]["config"];
+        type GenerateContents = Parameters<typeof ai.models.generateContent>[0]["contents"];
+        const requestContents = contents as GenerateContents;
+        const requestConfig = config as GenerateConfig;
+
+        const request: Promise<unknown> = stream
+          ? ai.models.generateContentStream({ model: candidateModel, contents: requestContents, config: requestConfig }) as Promise<unknown>
+          : ai.models.generateContent({ model: candidateModel, contents: requestContents, config: requestConfig }) as Promise<unknown>;
 
         const result = await runWithTimeout(
-          request,
+          request as Promise<unknown>,
           Math.min(timeoutMs, Math.max(0, overallDeadline - Date.now())),
           "İstek zaman aşımına uğradı, lütfen tekrar deneyin.",
         );

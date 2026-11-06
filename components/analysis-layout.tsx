@@ -1,6 +1,6 @@
 "use client";
 
-import { type ChangeEvent, type DragEvent, useEffect, useMemo, useState } from "react";
+import { type ChangeEvent, type DragEvent, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
 import { extractCvTextFromFile, validateCvFile } from "@/lib/extract-cv";
 import { parseLinkedInCompetitionMeta } from "@/lib/linkedin";
@@ -63,7 +63,7 @@ function EmptyState() {
             <path d="M8 8h8M8 12h5" strokeLinecap="round" />
           </svg>
         </div>
-        <h3 className="text-xl font-semibold text-[#1E1B4B] dark:text-slate-100">İlanı ve CV'ni sol taraftan yapıştırın</h3>
+        <h3 className="text-xl font-semibold text-[#1E1B4B] dark:text-slate-100">İlanı ve CV&apos;ni sol taraftan yapıştırın</h3>
         <p className="text-sm text-[#4B5563] dark:text-slate-400">
           Analiz Et’e bastığınızda uyum puanı, gereksinim karşılaştırması ve öneriler burada görünür.
         </p>
@@ -158,7 +158,6 @@ export function AnalysisDashboard({
   const [showHistory, setShowHistory] = useState(false);
   const [pendingDeleteAll, setPendingDeleteAll] = useState(false);
   const [activeTab, setActiveTab] = useState<"cv" | "onYazi" | "iskur" | "ozet">("cv");
-  const [theme, setTheme] = useState<"light" | "dark">("light");
   const [cvMode, setCvMode] = useState<"paste" | "file">("paste");
   const [cvFileName, setCvFileName] = useState("");
   const [cvFileMessage, setCvFileMessage] = useState("");
@@ -179,7 +178,7 @@ export function AnalysisDashboard({
       setCvFile(file);
       setCvFileName(file.name);
 
-      if (getUploadState(wordCount, file.type || file.name) === "metin-hazir") {
+      if (getUploadState(wordCount) === "metin-hazir") {
         setCv(extracted);
         setCvMode("paste");
         setCvFileMessage(`${file.name} dosyasından ${wordCount} kelime okundu. Lütfen kontrol et.`);
@@ -248,26 +247,55 @@ export function AnalysisDashboard({
     }
   }
 
-  useEffect(() => {
+  const getThemeSnapshot = (): "light" | "dark" => {
+    if (typeof window === "undefined") {
+      return "light";
+    }
+
     try {
       const savedTheme = window.localStorage.getItem("career-theme");
-      if (savedTheme === "dark" || savedTheme === "light") {
-        setTheme(savedTheme);
+      return savedTheme === "dark" ? "dark" : "light";
+    } catch {
+      return "light";
+    }
+  };
+
+  const subscribeToTheme = (callback: () => void) => {
+    if (typeof window === "undefined") {
+      return () => undefined;
+    }
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === "career-theme") {
+        callback();
+      }
+    };
+
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  };
+
+  const theme = useSyncExternalStore<"light" | "dark">(subscribeToTheme, getThemeSnapshot, () => "light");
+
+  const setTheme = (nextTheme: "light" | "dark" | ((previous: "light" | "dark") => "light" | "dark")) => {
+    const resolvedTheme = typeof nextTheme === "function" ? nextTheme(theme) : nextTheme;
+
+    if (typeof document !== "undefined") {
+      document.documentElement.classList.toggle("dark", resolvedTheme === "dark");
+    }
+
+    try {
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("career-theme", resolvedTheme);
       }
     } catch {
       // ignore storage issues
     }
-  }, []);
+  };
 
   useEffect(() => {
     const root = document.documentElement;
     root.classList.toggle("dark", theme === "dark");
-
-    try {
-      window.localStorage.setItem("career-theme", theme);
-    } catch {
-      // ignore storage issues
-    }
   }, [theme]);
 
   const keywordMatch = useMemo(() => {
@@ -280,22 +308,11 @@ export function AnalysisDashboard({
     };
   }, [result]);
 
-  const scoreColor = useMemo(() => {
-    const value = result?.uyumPuani ?? 0;
-    if (value >= 75) return "text-emerald-600 dark:text-emerald-400";
-    if (value >= 50) return "text-amber-600 dark:text-amber-400";
-    return "text-red-600 dark:text-red-400";
-  }, [result]);
-
   const linkedInCompetition = parseLinkedInCompetitionMeta(ilan);
   const competitionValue =
     result?.ilanOzeti?.pozisyonBasinaBasvuru !== undefined && result?.ilanOzeti?.pozisyonBasinaBasvuru !== null
       ? Number(result.ilanOzeti.pozisyonBasinaBasvuru)
       : linkedInCompetition ? Number(linkedInCompetition.value) : null;
-
-  const competitionLevel = competitionValue === null ? "—" : competitionValue <= 5 ? "Düşük" : competitionValue <= 20 ? "Orta" : "Yüksek";
-  const competitionTone =
-    competitionValue === null ? "bg-slate-200 text-slate-600" : competitionValue <= 5 ? "bg-emerald-100 text-emerald-700" : competitionValue <= 20 ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700";
 
   const requirementSummary = useMemo(() => {
     const required = result?.gereksinimler.filter((item) => item.tur === "zorunlu") ?? [];
@@ -486,7 +503,7 @@ export function AnalysisDashboard({
           {pendingDeleteAll ? (
             <div className="border-b border-[#F0EBFA] bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/30">
               <p className="text-sm font-medium text-red-700 dark:text-red-200">
-                Tüm analiz geçmişin ve kayıtlı CV'n bu tarayıcıdan silinecek. Bu işlem geri alınamaz.
+                Tüm analiz geçmişin ve kayıtlı CV&apos;n bu tarayıcıdan silinecek. Bu işlem geri alınamaz.
               </p>
               <div className="mt-3 flex gap-2">
                 <button
@@ -522,6 +539,7 @@ export function AnalysisDashboard({
             </div>
 
             <div className="space-y-2">
+              {cvFileName ? <p className="text-xs text-violet-700 dark:text-violet-300">{cvFileName}</p> : null}
               <div className="flex items-center justify-between gap-2">
                 <label className="block text-sm font-semibold text-[#4B5563] dark:text-slate-300">CV</label>
                 <div className="inline-flex overflow-hidden rounded-xl border border-[#EAE4F8] bg-[#F7F5FF] p-0.5 dark:border-slate-700 dark:bg-slate-800">
@@ -553,7 +571,7 @@ export function AnalysisDashboard({
                   onChange={(event) => setRememberCv(event.target.checked)}
                   className="h-4 w-4 rounded border-[#D9D3EE] text-violet-600 focus:ring-violet-500"
                 />
-                CV'mi bu tarayıcıda hatırla
+                CV&apos;mi bu tarayıcıda hatırla
               </label>
 
               {cvMode === "paste" ? (
@@ -623,7 +641,7 @@ export function AnalysisDashboard({
                         Görüntüden oku
                       </button>
                       <p className="text-[11px] text-red-600 dark:text-red-300">
-                        PDF, metne çevrilmek üzere Google Gemini'ye gönderilir; görüntüdeki iletişim bilgileri önceden silinemez.
+                        PDF, metne çevrilmek üzere Google Gemini&apos;ye gönderilir; görüntüdeki iletişim bilgileri önceden silinemez.
                       </p>
                     </>
                   ) : null}
