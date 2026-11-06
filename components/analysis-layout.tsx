@@ -3,8 +3,8 @@
 import { type ChangeEvent, type DragEvent, useEffect, useMemo, useState } from "react";
 
 import { extractCvTextFromFile, validateCvFile } from "@/lib/extract-cv";
+import { parseLinkedInCompetitionMeta } from "@/lib/linkedin";
 import { getUploadState } from "@/lib/upload-state";
-import { calculateCompatibilityScore } from "@/lib/scoring";
 import type { AnalysisHistoryEntry } from "@/lib/storage";
 import type { AnalysisResult, RequirementStatus } from "@/lib/types";
 
@@ -280,16 +280,6 @@ export function AnalysisDashboard({
     };
   }, [result]);
 
-  const compatibilityMetrics = useMemo(() => {
-    if (!result) return { meaning: 0, keyword: 0 };
-    const { meaning, keyword } = calculateCompatibilityScore({
-      requirements: result.gereksinimler,
-      keywords: result.anahtarKelimeler,
-      cvText: cv,
-    });
-    return { meaning, keyword };
-  }, [cv, result]);
-
   const scoreColor = useMemo(() => {
     const value = result?.uyumPuani ?? 0;
     if (value >= 75) return "text-emerald-600 dark:text-emerald-400";
@@ -297,20 +287,41 @@ export function AnalysisDashboard({
     return "text-red-600 dark:text-red-400";
   }, [result]);
 
+  const linkedInCompetition = parseLinkedInCompetitionMeta(ilan);
   const competitionValue =
     result?.ilanOzeti?.pozisyonBasinaBasvuru !== undefined && result?.ilanOzeti?.pozisyonBasinaBasvuru !== null
       ? Number(result.ilanOzeti.pozisyonBasinaBasvuru)
-      : null;
+      : linkedInCompetition ? Number(linkedInCompetition.value) : null;
 
   const competitionLevel = competitionValue === null ? "—" : competitionValue <= 5 ? "Düşük" : competitionValue <= 20 ? "Orta" : "Yüksek";
   const competitionTone =
     competitionValue === null ? "bg-slate-200 text-slate-600" : competitionValue <= 5 ? "bg-emerald-100 text-emerald-700" : competitionValue <= 20 ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700";
 
+  const requirementSummary = useMemo(() => {
+    const required = result?.gereksinimler.filter((item) => item.tur === "zorunlu") ?? [];
+    const preferred = result?.gereksinimler.filter((item) => item.tur === "tercih") ?? [];
+    const tasks = result?.gereksinimler.filter((item) => item.tur === "gorev") ?? [];
+    const requiredMet = required.filter((item) => item.durum === "var").length;
+    const preferredMet = preferred.filter((item) => item.durum === "var").length;
+    const taskMet = tasks.filter((item) => item.durum === "var").length;
+    return {
+      requiredMet,
+      requiredTotal: required.length,
+      preferredMet,
+      preferredTotal: preferred.length,
+      taskMet,
+      taskTotal: tasks.length,
+      hasMissingMandatory: required.some((item) => item.durum === "yok"),
+    };
+  }, [result]);
+
   const summaryCards = [
     {
       title: "Uyum Puanı",
       value: result ? `${result.uyumPuani}` : "--",
-      hint: result ? `Anlam: ${compatibilityMetrics.meaning} · Anahtar kelime: ${compatibilityMetrics.keyword}` : "İlan ile CV eşleşmesi",
+      hint: result
+        ? `Zorunlu: ${requirementSummary.requiredMet}/${requirementSummary.requiredTotal} · Tercih: ${requirementSummary.preferredMet}/${requirementSummary.preferredTotal} · Görev: ${requirementSummary.taskMet}/${requirementSummary.taskTotal} · Anahtar kelime: %${keywordMatch.percent}`
+        : "İlan ile CV eşleşmesi",
       tone: "violet" as const,
       icon: "spark" as const,
     },
@@ -331,9 +342,12 @@ export function AnalysisDashboard({
     {
       title: "Rekabet",
       value: competitionValue === null ? "—" : `~${Math.round(competitionValue)} aday`,
-      hint: result?.ilanOzeti?.basvuruSayisi !== undefined && result?.ilanOzeti?.pozisyonSayisi !== undefined
-        ? `${result.ilanOzeti.basvuruSayisi} başvuru · ${result.ilanOzeti.pozisyonSayisi} pozisyon`
-        : "",
+      hint:
+        result?.ilanOzeti?.basvuruSayisi !== undefined && result?.ilanOzeti?.pozisyonSayisi !== undefined
+          ? `${result.ilanOzeti.basvuruSayisi} başvuru · ${result.ilanOzeti.pozisyonSayisi} pozisyon`
+          : linkedInCompetition
+            ? `${linkedInCompetition.label}`
+            : "",
       tone: "peach" as const,
       icon: "trend" as const,
     },
@@ -426,7 +440,7 @@ export function AnalysisDashboard({
                       >
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-sm font-semibold text-[#1E1B4B] dark:text-slate-100">
-                            {entry.firma ?? entry.baslik}
+                            {entry.baslik ?? entry.firma ?? "İlan"}
                           </span>
                           <span className="block text-[11px] text-[#4B5563] dark:text-slate-400">
                             {new Date(entry.date).toLocaleDateString("tr-TR")}
@@ -600,13 +614,18 @@ export function AnalysisDashboard({
                 <div className="space-y-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
                   <p>{cvFileError}</p>
                   {cvFileError.includes("Bu PDF'te seçilebilir metin yok") ? (
-                    <button
-                      type="button"
-                      onClick={handleOcrFromPdf}
-                      className="rounded-lg border border-red-200 bg-white px-2.5 py-1.5 font-medium text-red-700 hover:bg-red-50 dark:border-red-800 dark:bg-red-950/30 dark:text-red-200"
-                    >
-                      Görüntüden oku
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        onClick={handleOcrFromPdf}
+                        className="rounded-lg border border-red-200 bg-white px-2.5 py-1.5 font-medium text-red-700 hover:bg-red-50 dark:border-red-800 dark:bg-red-950/30 dark:text-red-200"
+                      >
+                        Görüntüden oku
+                      </button>
+                      <p className="text-[11px] text-red-600 dark:text-red-300">
+                        PDF, metne çevrilmek üzere Google Gemini'ye gönderilir; görüntüdeki iletişim bilgileri önceden silinemez.
+                      </p>
+                    </>
                   ) : null}
                 </div>
               ) : null}
@@ -660,7 +679,7 @@ export function AnalysisDashboard({
                 result && (
                   <div className="space-y-6">
                     {result.cached ? (
-                      <div className="flex justify-end">
+                      <div className="flex justify-end pr-16">
                         <span className="inline-flex items-center rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-violet-700 dark:border-violet-900 dark:bg-violet-950/40 dark:text-violet-300">
                           Önbellekten
                         </span>
@@ -679,18 +698,26 @@ export function AnalysisDashboard({
                             </div>
 
                             {card.title === "Uyum Puanı" ? (
-                              <div className="mt-4 flex justify-center">
-                                <CircularProgress
-                                  value={result.uyumPuani}
-                                  colorClass={
-                                    result.uyumPuani >= 75
-                                      ? "text-emerald-500"
-                                      : result.uyumPuani >= 50
-                                        ? "text-amber-500"
-                                        : "text-red-500"
-                                  }
-                                />
-                              </div>
+                              <>
+                                <div className="mt-4 flex justify-center">
+                                  <CircularProgress
+                                    value={result.uyumPuani}
+                                    colorClass={
+                                      result.uyumPuani >= 75
+                                        ? "text-emerald-500"
+                                        : result.uyumPuani >= 50
+                                          ? "text-amber-500"
+                                          : "text-red-500"
+                                    }
+                                  />
+                                </div>
+                                <div className="mt-3 text-center">
+                                  <p className="mt-1 text-[11px] text-violet-700 dark:text-violet-300">{card.hint}</p>
+                                  {requirementSummary.hasMissingMandatory ? (
+                                    <p className="mt-1 text-[10px] font-semibold text-red-600 dark:text-red-400">Zorunlu şart eksik</p>
+                                  ) : null}
+                                </div>
+                              </>
                             ) : (
                               <>
                                 <p className={`mt-3 text-2xl font-bold ${palette.value}`}>{card.value}</p>
@@ -728,14 +755,23 @@ export function AnalysisDashboard({
                                       <span className="font-medium text-[#1E1B4B] dark:text-slate-100">{item.madde}</span>
                                     </div>
                                   </td>
-                                  <td className="py-3 pr-4 text-[#4B5563] dark:text-slate-300">{item.tur === "zorunlu" ? "Zorunlu" : "Tercih"}</td>
+                                  <td className="py-3 pr-4 text-[#4B5563] dark:text-slate-300">{item.tur === "zorunlu" ? "Zorunlu" : item.tur === "tercih" ? "Tercih" : "Görev"}</td>
                                   <td className="py-3 pr-4">
                                     <span className={`inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-semibold ${statusStyles[item.durum]}`}>
                                       <BadgeDot status={item.durum} />
                                       {item.durum === "var" ? "Var" : item.durum === "kismen" ? "Kısmen" : "Yok"}
                                     </span>
                                   </td>
-                                  <td className="py-3 text-[#4B5563] dark:text-slate-300">{item.kanit || "-"}</td>
+                                  <td className="py-3 text-[#4B5563] dark:text-slate-300">
+                                    <div className="space-y-1">
+                                      <span>{item.kanit || "-"}</span>
+                                      {item.durum === "var" && item.kanitGucu === "zayif" ? (
+                                        <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
+                                          sadece beceri listesinde
+                                        </span>
+                                      ) : null}
+                                    </div>
+                                  </td>
                                 </tr>
                               ))}
                             </tbody>
@@ -765,6 +801,7 @@ export function AnalysisDashboard({
                             {result.anahtarKelimeler.map((keyword) => (
                               <span
                                 key={keyword.kelime}
+                                title={keyword.eslesenTerim ? `Eşleşen terim: ${keyword.eslesenTerim}` : undefined}
                                 className={`rounded-full px-2.5 py-1 text-xs font-medium ${
                                   keyword.cvdeVar
                                     ? "border border-teal-200 bg-teal-50 text-teal-700 dark:border-teal-900 dark:bg-teal-950/40 dark:text-teal-300"

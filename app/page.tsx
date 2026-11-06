@@ -59,11 +59,13 @@ export default function Home() {
       setResult(data);
 
       const firstLine = ilan.split(/\r?\n/).map((line) => line.trim()).find(Boolean) ?? "İlan";
+      const firma = data.firma ?? data.ilanOzeti?.firma ?? "İlan";
+      const pozisyon = data.pozisyon ?? data.ilanOzeti?.meslek ?? firstLine;
       const entry: AnalysisHistoryEntry = {
         id: typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`,
         date: new Date().toISOString(),
-        firma: data.ilanOzeti?.firma ?? "İlan",
-        baslik: data.ilanOzeti?.meslek ?? firstLine,
+        firma,
+        baslik: data.pozisyon || data.ilanOzeti?.meslek ? `${pozisyon} — ${firma}` : firstLine,
         puan: data.uyumPuani,
         analysis: data,
         ilan,

@@ -2,14 +2,7 @@ import { GoogleGenAI } from "@google/genai";
 import { NextResponse } from "next/server";
 
 import { generateWithRetry, GeminiRequestError, getUserFriendlyGeminiErrorMessage } from "@/lib/gemini";
-
-function sanitizeCvForModel(cv: string) {
-  return cv
-    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "")
-    .replace(/(?:\+?\d[\d\s().-]{7,}\d)/g, "")
-    .replace(/\s{2,}/g, " ")
-    .trim();
-}
+import { redactSensitiveInfo } from "@/lib/redact";
 
 function normalizeMessages(messages: unknown[]) {
   return messages
@@ -63,7 +56,7 @@ export async function POST(request: Request) {
 
     const fallbackModel = process.env.GEMINI_FALLBACK_MODEL;
     const ai = new GoogleGenAI({ apiKey });
-    const safeCv = sanitizeCvForModel(cv);
+    const safeCv = redactSensitiveInfo(cv);
     const today = new Date().toLocaleDateString("tr-TR", {
       day: "2-digit",
       month: "2-digit",
