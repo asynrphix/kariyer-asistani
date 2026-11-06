@@ -1,0 +1,374 @@
+0 notifications
+
+Search
+
+
+Home
+Network
+Jobs
+Messaging
+Notifications
+
+
+Me
+
+For Business
+Get hired for ₺0
+
+Company logo for, RockSoft.
+RockSoft
+
+
+Gömülü Yazılım Mühendisi (Embedded Software Engineer)
+
+Ankara, Türkiye · 2 days ago · Over 100 applicants
+
+Promoted by hirer · Actively reviewing applicants
+
+On-site
+Full-time
+
+Easy Apply
+
+Saved
+Use AI to assess how you fit
+Get AI-powered advice on this job and more exclusive features with Premium. Activate Premium for ₺0
+
+Show match details
+
+Tailor my resume
+
+Help me stand out
+
+About the job
+Çalışma Şekli: Tam ZamanlıDeneyim: Yeni mezun veya tercihen 0–2 yılRockSoft A.Ş. bünyesinde, savunma teknolojileri ve ileri teknoloji sistemlerine yönelik yürüttüğümüz Ar-Ge ve ürün geliştirme çalışmalarında görev alacak, C/C++ programlama ve gömülü sistemler alanında kendisini geliştirmek isteyen bir Gömülü Yazılım Mühendisi arıyoruz.Pozisyon ağırlıklı olarak Linux tabanlı gömülü sistemlerde yazılım geliştirmeyi kapsamaktadır. NVIDIA Jetson ve benzeri ARM tabanlı platformlarda veri işleme ve yapay zekâ destekli sistemler üzerinde çalışma fırsatı sunulmakta olup, projelerin ihtiyaçlarına bağlı olarak mikrodenetleyici tabanlı sistemlerde de görev alınabilecektir.
+İş Tanımı
+Linux tabanlı gömülü sistemler için C/C++ ile yazılım geliştirilmesine katkı sağlanması
+Veri işleme, haberleşme ve sistem yazılımı bileşenlerinin geliştirilmesi
+Mevcut yazılım bileşenlerinin entegrasyon, test ve hata ayıklama çalışmalarının yürütülmesi
+ARM tabanlı gömülü platformlarda yazılım geliştirme ve doğrulama faaliyetlerine katılım
+NVIDIA Jetson ve benzeri platformlarda geliştirilen uygulamaların entegrasyon ve test çalışmalarına destek verilmesi
+Yazılım testleri, teknik dokümantasyon ve kod inceleme süreçlerine katkı sağlanması
+
+Aranan Nitelikler
+Elektrik-Elektronik, Bilgisayar, Yazılım Mühendisliği veya ilgili mühendislik bölümlerinden mezun
+Yeni mezun veya tercihen 0–2 yıl profesyonel deneyime sahip
+C programlama dilinin temel kavramlarına hâkimiyet
+Pointer, bellek yönetimi, veri yapıları ve algoritmalar konusunda temel bilgi
+İşletim sistemlerinin temel çalışma prensipleri, process ve thread kavramları hakkında bilgi
+Linux ortamında temel düzeyde çalışma deneyimi
+Git gibi sürüm kontrol araçlarına aşinalık
+Analitik düşünme, problem çözme ve teknik konularda araştırma yapma becerisi
+Öğrenmeye açık, ekip çalışmasına yatkın ve gömülü yazılım geliştirmeye ilgili
+
+Tercih Sebebi Olacak Yetkinlikler
+C++ programlama deneyimi
+Linux sistem programlama ve POSIX API hakkında temel bilgi
+TCP/IP, UDP ve socket programlama konusunda bilgi veya uygulama deneyimi
+NVIDIA Jetson, Raspberry Pi veya benzeri ARM tabanlı gömülü Linux platformlarında akademik, kişisel proje veya staj deneyimi
+GPU hızlandırma ve gömülü yapay zekâ uygulamalarına ilgi
+Mikrodenetleyiciler ve FreeRTOS veya benzeri RTOS ortamlarında geliştirme deneyimi
+UART, SPI, I²C gibi donanım haberleşme arayüzlerine aşinalık
+GDB, Make/CMake ve cross-compilation araçlarına aşinalık
+Gömülü sistemler, gerçek zamanlı yazılım veya DSP konularında akademik, kişisel proje veya staj deneyimi
+
+BaşvuruGömülü sistemlere ilgi duyan, yazılımın yalnızca nasıl yazıldığını değil, donanım ve işletim sistemi üzerinde nasıl çalıştığını da öğrenmek isteyen mühendislerin başvurularını bekliyoruz.Başvurularınızı LinkedIn üzerinden iletebilirsiniz.… more
+Set alert for similar jobs
+Embedded Software Engineer, Ankara, Türkiye
+
+Off
+
+Job search faster with Premium
+
+Access company insights like strategic priorities, headcount trends, and more
+
+
+
+
+Millions of members use Premium
+
+Activate Premium for ₺0
+1-month free trial. Easy to cancel. We’ll remind you 7 days before your trial ends.
+
+About the company
+
+RockSoft
+
+1,843 followers
+
+
+Follow
+Software Development
+
+ • 
+
+2-10 employees
+
+ • 
+
+7 on LinkedIn
+
+Savunma Sanayi alanında Radar, Radar Elektronik Harp, Haberleşme Elektronik Harp, Komuta Kontrol, Coğrafi Bilgi Sistemleri yazılımları geliştirme.
+Kullanıcı arayüzü ve gömülü yazılımlar.
+Yüksek alan bilgisi.
+Kaliteli ve yüksek çalışma zamanı performanslı yazılımlar.
+Yazılım ürün hattı alt yapısı.… more
+
+Show more
+More jobs
+
+Gömülü Gerçek Zamanlı Yazılım Mühendisi 
+
+Aselsan
+
+Ankara, Türkiye (On-site)
+
+
+15 school alumni work here
+
+Promoted
+
+ · 
+
+Posted 3 weeks ago3 weeks ago
+
+
+Savunma Sistem Teknolojileri Gömülü Yazılım Tasarım Mühendisi 
+
+Aselsan
+
+Ankara, Türkiye (On-site)
+
+
+15 school alumni work here
+
+Promoted
+
+ · 
+
+Posted 1 month ago1 month ago
+
+
+Kıdemli Gömülü Yazılım Mühendisi
+
+AVCI ARGE TEKNOLOJİ ANONİM ŞİRKETİ
+
+Ankara (On-site)
+
+Actively reviewing applicants
+
+Promoted
+
+ · 
+
+Posted 1 week ago1 week ago
+
+ · 
+
+Easy Apply
+
+
+Deneyimli Gömülü Yazılım Mühendisi (Senior Embedded Software Engineer)
+
+RockSoft
+
+Ankara, Türkiye (On-site)
+
+Actively reviewing applicants
+
+Promoted
+
+ · 
+
+Posted 2 days ago2 days ago
+
+ · 
+
+Easy Apply
+
+
+Yer Sistemleri Yazılım Mühendisi
+
+TMT
+
+Ankara, Türkiye (On-site)
+
+Actively reviewing applicants
+
+Promoted
+
+ · 
+
+Posted 1 day ago1 day ago
+
+ · 
+
+Easy Apply
+
+
+Senior Embedded Software Engineer 
+
+Gini Talent
+
+Istanbul, Türkiye (On-site)
+
+
+1 school alumni works here
+
+Promoted
+
+ · 
+
+Posted 3 weeks ago3 weeks ago
+
+ · 
+
+Easy Apply
+
+
+Kıdemli Yazılım Mühendisi
+
+Andasis Elektronik Sanayi  ve Tic. A.S.
+
+Pendik (On-site)
+
+Actively reviewing applicants
+
+Promoted
+
+ · 
+
+Posted 1 month ago1 month ago
+
+ · 
+
+Easy Apply
+
+
+Lead Engineer - Software
+
+Beko Corporate
+
+Manisa (Hybrid)
+
+
+1 school alumni works here
+
+Promoted
+
+ · 
+
+Posted 2 weeks ago2 weeks ago
+
+
+Robotik Yazılım Mühendisi 
+
+Anadolu Robotik
+
+Gölcük (On-site)
+
+Actively reviewing applicants
+
+Promoted
+
+ · 
+
+Posted 5 days ago5 days ago
+
+ · 
+
+Easy Apply
+
+
+Gömülü Yazılım Geliştirme Mühendisi 
+
+TEITECH
+
+Eskişehir, Türkiye (On-site)
+
+Actively reviewing applicants
+
+Promoted
+
+ · 
+
+Posted 3 weeks ago3 weeks ago
+
+ · 
+
+Easy Apply
+
+
+Engineer, Firmware Engineering
+
+Analog Devices
+
+Greater Istanbul
+
+Promoted
+
+ · 
+
+Posted 6 days ago6 days ago
+
+
+Embedded Software & Robotics Developer (AI Drone Delivery Startup)
+
+OneSec
+
+Istanbul (On-site)
+
+Promoted
+
+ · 
+
+Posted 20 hours ago20 hours ago
+
+See more jobs like this
+Looking for talent?
+
+Post a job
+About
+
+Accessibility
+
+Talent Solutions
+
+Community Guidelines
+
+Careers
+
+Marketing Solutions 
+
+Privacy & Terms
+
+Ad Choices
+
+Advertising
+
+Sales Solutions
+
+Mobile
+
+Small Business
+
+Safety Center
+
+LinkedIn Corporation © 2026
+
+Questions?
+
+Visit our Help Center.
+
+Manage your account and privacy
+
+Go to your Settings.
+
+Recommendation transparency
+
+Learn more about Recommended Content.
+
+Select language
+
+
+English (English)
