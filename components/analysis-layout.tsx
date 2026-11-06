@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { type ChangeEvent, type DragEvent, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
 import { extractCvTextFromFile, validateCvFile } from "@/lib/extract-cv";
+import { formatDate, formatPercent } from "@/lib/format";
 import { parseLinkedInCompetitionMeta } from "@/lib/linkedin";
 import { getUploadState } from "@/lib/upload-state";
 import type { AnalysisHistoryEntry } from "@/lib/storage";
@@ -37,7 +39,7 @@ function CircularProgress({ value, colorClass }: { value: number; colorClass: st
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-lg font-bold text-[#1E1B4B] dark:text-slate-100">{value}</span>
+        <span className="text-lg font-bold text-[#1E1B4B] dark:text-slate-100">{formatPercent(value)}</span>
       </div>
     </div>
   );
@@ -131,8 +133,11 @@ export function AnalysisDashboard({
   retrying,
   error,
   result,
+  resultTitle,
+  onTitleChange,
   onAnalyze,
   onCopySummary,
+  isDemoMode = false,
 }: {
   ilan: string;
   cv: string;
@@ -151,12 +156,17 @@ export function AnalysisDashboard({
   retrying: boolean;
   error: string;
   result: AnalysisResult | null;
+  resultTitle: string;
+  onTitleChange: (value: string) => void;
   onAnalyze: () => Promise<void> | void;
   onCopySummary: () => Promise<void> | void;
+     isDemoMode?: boolean;
 }) {
   const [leftCollapsed, setLeftCollapsed] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [pendingDeleteAll, setPendingDeleteAll] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [draftTitle, setDraftTitle] = useState(resultTitle || "Adsız ilan");
   const [activeTab, setActiveTab] = useState<"cv" | "onYazi" | "iskur" | "ozet">("cv");
   const [cvMode, setCvMode] = useState<"paste" | "file">("paste");
   const [cvFileName, setCvFileName] = useState("");
@@ -334,10 +344,10 @@ export function AnalysisDashboard({
 
   const summaryCards = [
     {
-      title: "Uyum Puanı",
-      value: result ? `${result.uyumPuani}` : "--",
+      title: "Uyum oranı",
+      value: result ? formatPercent(result.uyumPuani) : "--",
       hint: result
-        ? `Zorunlu: ${requirementSummary.requiredMet}/${requirementSummary.requiredTotal} · Tercih: ${requirementSummary.preferredMet}/${requirementSummary.preferredTotal} · Görev: ${requirementSummary.taskMet}/${requirementSummary.taskTotal} · Anahtar kelime: %${keywordMatch.percent}`
+        ? `Zorunlu: ${requirementSummary.requiredMet}/${requirementSummary.requiredTotal} · Tercih: ${requirementSummary.preferredMet}/${requirementSummary.preferredTotal} · Görev: ${requirementSummary.taskMet}/${requirementSummary.taskTotal} · Anahtar kelime: ${formatPercent(keywordMatch.percent)}`
         : "İlan ile CV eşleşmesi",
       tone: "violet" as const,
       icon: "spark" as const,
@@ -345,7 +355,7 @@ export function AnalysisDashboard({
     {
       title: "Anahtar Kelime Eşleşmesi",
       value: result ? `${keywordMatch.matches}/${keywordMatch.total}` : "--",
-      hint: result ? `${keywordMatch.percent}% uyum` : "",
+      hint: result ? `${formatPercent(keywordMatch.percent)} uyum` : "",
       tone: "teal" as const,
       icon: "match" as const,
     },
@@ -460,7 +470,7 @@ export function AnalysisDashboard({
                             {entry.baslik ?? entry.firma ?? "İlan"}
                           </span>
                           <span className="block text-[11px] text-[#4B5563] dark:text-slate-400">
-                            {new Date(entry.date).toLocaleDateString("tr-TR")}
+                            {formatDate(entry.date)}
                           </span>
                         </span>
                         <span className={`inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-[11px] font-bold ${entry.puan >= 75 ? "bg-emerald-100 text-emerald-700" : entry.puan >= 50 ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}>
@@ -534,129 +544,147 @@ export function AnalysisDashboard({
                 value={ilan}
                 onChange={(event) => setIlan(event.target.value)}
                 placeholder="İlan metnini buraya yapıştırın..."
-                className="h-52 w-full resize-none rounded-2xl border border-[#EAE4F8] bg-[#F9F7FF] p-3 text-sm leading-6 text-[#1E1B4B] placeholder:text-[#6B7280] outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400 dark:focus:border-violet-500 dark:focus:ring-violet-900/50"
+                readOnly={isDemoMode}
+                className="h-52 w-full resize-none rounded-2xl border border-[#EAE4F8] bg-[#F9F7FF] p-3 text-sm leading-6 text-[#1E1B4B] placeholder:text-[#6B7280] outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400 dark:focus:border-violet-500 dark:focus:ring-violet-900/50 disabled:cursor-default"
               />
             </div>
 
-            <div className="space-y-2">
-              {cvFileName ? <p className="text-xs text-violet-700 dark:text-violet-300">{cvFileName}</p> : null}
-              <div className="flex items-center justify-between gap-2">
-                <label className="block text-sm font-semibold text-[#4B5563] dark:text-slate-300">CV</label>
-                <div className="inline-flex overflow-hidden rounded-xl border border-[#EAE4F8] bg-[#F7F5FF] p-0.5 dark:border-slate-700 dark:bg-slate-800">
-                  {(["paste", "file"] as const).map((mode) => (
-                    <button
-                      key={mode}
-                      type="button"
-                      onClick={() => setCvMode(mode)}
-                      className={`rounded-lg px-2.5 py-1 text-xs font-medium transition ${
-                        cvMode === mode
-                          ? "bg-violet-600 text-white shadow-sm"
-                          : "text-[#4B5563] hover:bg-violet-50 dark:text-slate-300 dark:hover:bg-slate-700"
-                      }`}
-                    >
-                      {mode === "paste" ? "Metin yapıştır" : "Dosya yükle"}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {cvFileMessage ? (
-                <p className="text-xs text-violet-700 dark:text-violet-300">{cvFileMessage}</p>
-              ) : null}
-
-              <label className="mt-2 flex items-center gap-2 text-xs text-[#4B5563] dark:text-slate-300">
-                <input
-                  type="checkbox"
-                  checked={rememberCv}
-                  onChange={(event) => setRememberCv(event.target.checked)}
-                  className="h-4 w-4 rounded border-[#D9D3EE] text-violet-600 focus:ring-violet-500"
-                />
-                CV&apos;mi bu tarayıcıda hatırla
-              </label>
-
-              {cvMode === "paste" ? (
-                <textarea
-                  value={cv}
-                  onChange={(event) => setCv(event.target.value)}
-                  placeholder="CV metnini buraya yapıştırın..."
-                  className="h-52 w-full resize-none rounded-2xl border border-[#EAE4F8] bg-[#F9F7FF] p-3 text-sm leading-6 text-[#1E1B4B] placeholder:text-[#6B7280] outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400 dark:focus:border-violet-500 dark:focus:ring-violet-900/50"
-                />
-              ) : (
-                <div
-                  onDragOver={(event) => {
-                    event.preventDefault();
-                    setCvDropActive(true);
-                  }}
-                  onDragLeave={() => setCvDropActive(false)}
-                  onDrop={handleFileDrop}
-                  className={`rounded-2xl border border-dashed p-4 text-center ${
-                    cvDropActive
-                      ? "border-violet-400 bg-violet-50 dark:bg-violet-950/30"
-                      : "border-[#EAE4F8] bg-[#F9F7FF] dark:border-slate-600 dark:bg-slate-800"
-                  }`}
-                >
-                  <input
-                    type="file"
-                    accept=".pdf,.docx"
-                    className="hidden"
-                    data-cv-file-input="true"
-                    onChange={handleCvFileSelection}
-                  />
-                  <div className="space-y-3">
-                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-100 text-violet-600 dark:bg-violet-900/50 dark:text-violet-300">
-                      <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8">
-                        <path d="M12 16V4m0 0 4 4m-4-4-4 4M4 16.5v1A2.5 2.5 0 0 0 6.5 20h11A2.5 2.5 0 0 0 20 17.5v-1" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </div>
-                    <p className="text-sm text-[#4B5563] dark:text-slate-300">
-                      PDF veya DOCX dosyasını sürükleyip bırakın
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => document.querySelector<HTMLInputElement>('input[data-cv-file-input="true"]')?.click()}
-                      className="inline-flex items-center justify-center rounded-xl bg-violet-600 px-3 py-2 text-sm font-semibold text-white hover:bg-violet-500 disabled:cursor-not-allowed disabled:bg-violet-200 disabled:text-violet-700"
-                    >
-                      Dosya seç
-                    </button>
+            {!isDemoMode ? (
+              <div className="space-y-2">
+                {cvFileName ? <p className="text-xs text-violet-700 dark:text-violet-300">{cvFileName}</p> : null}
+                <div className="flex items-center justify-between gap-2">
+                  <label className="block text-sm font-semibold text-[#4B5563] dark:text-slate-300">CV</label>
+                  <div className="inline-flex overflow-hidden rounded-xl border border-[#EAE4F8] bg-[#F7F5FF] p-0.5 dark:border-slate-700 dark:bg-slate-800">
+                    {(["paste", "file"] as const).map((mode) => (
+                      <button
+                        key={mode}
+                        type="button"
+                        onClick={() => setCvMode(mode)}
+                        className={`rounded-lg px-2.5 py-1 text-xs font-medium transition ${
+                          cvMode === mode
+                            ? "bg-violet-600 text-white shadow-sm"
+                            : "text-[#4B5563] hover:bg-violet-50 dark:text-slate-300 dark:hover:bg-slate-700"
+                        }`}
+                      >
+                        {mode === "paste" ? "Metin yapıştır" : "Dosya yükle"}
+                      </button>
+                    ))}
                   </div>
                 </div>
-              )}
 
-              {cvLoadingFile ? (
-                <div className="rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-sm text-violet-700 dark:border-violet-900 dark:bg-violet-950/40 dark:text-violet-300">
-                  Dosya okunuyor...
-                </div>
-              ) : null}
+                {cvFileMessage ? (
+                  <p className="text-xs text-violet-700 dark:text-violet-300">{cvFileMessage}</p>
+                ) : null}
 
-              {cvFileError ? (
-                <div className="space-y-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
-                  <p>{cvFileError}</p>
-                  {cvFileError.includes("Bu PDF'te seçilebilir metin yok") ? (
-                    <>
+                <label className="mt-2 flex items-center gap-2 text-xs text-[#4B5563] dark:text-slate-300">
+                  <input
+                    type="checkbox"
+                    checked={rememberCv}
+                    onChange={(event) => setRememberCv(event.target.checked)}
+                    className="h-4 w-4 rounded border-[#D9D3EE] text-violet-600 focus:ring-violet-500"
+                  />
+                  CV&apos;mi bu tarayıcıda hatırla
+                </label>
+
+                {cvMode === "paste" ? (
+                  <textarea
+                    value={cv}
+                    onChange={(event) => setCv(event.target.value)}
+                    placeholder="CV metnini buraya yapıştırın..."
+                    className="h-52 w-full resize-none rounded-2xl border border-[#EAE4F8] bg-[#F9F7FF] p-3 text-sm leading-6 text-[#1E1B4B] placeholder:text-[#6B7280] outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400 dark:focus:border-violet-500 dark:focus:ring-violet-900/50"
+                  />
+                ) : (
+                  <div
+                    onDragOver={(event) => {
+                      event.preventDefault();
+                      setCvDropActive(true);
+                    }}
+                    onDragLeave={() => setCvDropActive(false)}
+                    onDrop={handleFileDrop}
+                    className={`rounded-2xl border border-dashed p-4 text-center ${
+                      cvDropActive
+                        ? "border-violet-400 bg-violet-50 dark:bg-violet-950/30"
+                        : "border-[#EAE4F8] bg-[#F9F7FF] dark:border-slate-600 dark:bg-slate-800"
+                    }`}
+                  >
+                    <input
+                      type="file"
+                      accept=".pdf,.docx"
+                      className="hidden"
+                      data-cv-file-input="true"
+                      onChange={handleCvFileSelection}
+                    />
+                    <div className="space-y-3">
+                      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-100 text-violet-600 dark:bg-violet-900/50 dark:text-violet-300">
+                        <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8">
+                          <path d="M12 16V4m0 0 4 4m-4-4-4 4M4 16.5v1A2.5 2.5 0 0 0 6.5 20h11A2.5 2.5 0 0 0 20 17.5v-1" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </div>
+                      <p className="text-sm text-[#4B5563] dark:text-slate-300">
+                        PDF veya DOCX dosyasını sürükleyip bırakın
+                      </p>
                       <button
                         type="button"
-                        onClick={handleOcrFromPdf}
-                        className="rounded-lg border border-red-200 bg-white px-2.5 py-1.5 font-medium text-red-700 hover:bg-red-50 dark:border-red-800 dark:bg-red-950/30 dark:text-red-200"
+                        onClick={() => document.querySelector<HTMLInputElement>('input[data-cv-file-input="true"]')?.click()}
+                        className="inline-flex items-center justify-center rounded-xl bg-violet-600 px-3 py-2 text-sm font-semibold text-white hover:bg-violet-500 disabled:cursor-not-allowed disabled:bg-violet-200 disabled:text-violet-700"
                       >
-                        Görüntüden oku
+                        Dosya seç
                       </button>
-                      <p className="text-[11px] text-red-600 dark:text-red-300">
-                        PDF, metne çevrilmek üzere Google Gemini&apos;ye gönderilir; görüntüdeki iletişim bilgileri önceden silinemez.
-                      </p>
-                    </>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
+                    </div>
+                  </div>
+                )}
 
-            <button
-              type="button"
-              onClick={onAnalyze}
-              disabled={loading || !ilan.trim() || !cv.trim()}
-              className="inline-flex w-full items-center justify-center rounded-2xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:bg-violet-200 disabled:text-violet-700 dark:disabled:bg-violet-900/60 dark:disabled:text-violet-200"
-            >
-              {loading ? "Analiz ediliyor..." : "Analiz Et"}
-            </button>
+                {cvLoadingFile ? (
+                  <div className="rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-sm text-violet-700 dark:border-violet-900 dark:bg-violet-950/40 dark:text-violet-300">
+                    Dosya okunuyor...
+                  </div>
+                ) : null}
+
+                {cvFileError ? (
+                  <div className="space-y-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+                    <p>{cvFileError}</p>
+                    {cvFileError.includes("Bu PDF'te seçilebilir metin yok") ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={handleOcrFromPdf}
+                          className="rounded-lg border border-red-200 bg-white px-2.5 py-1.5 font-medium text-red-700 hover:bg-red-50 dark:border-red-800 dark:bg-red-950/30 dark:text-red-200"
+                        >
+                          Görüntüden oku
+                        </button>
+                        <p className="text-[11px] text-red-600 dark:text-red-300">
+                          PDF, metne çevrilmek üzere Google Gemini&apos;ye gönderilir; görüntüdeki iletişim bilgileri önceden silinemez.
+                        </p>
+                      </>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-[#4B5563] dark:text-slate-300">CV</label>
+                <textarea
+                  value={cv}
+                  readOnly
+                  className="h-52 w-full resize-none rounded-2xl border border-[#EAE4F8] bg-[#F9F7FF] p-3 text-sm leading-6 text-[#1E1B4B] placeholder:text-[#6B7280] outline-none transition dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 disabled:cursor-default"
+                />
+              </div>
+            )}
+
+            {isDemoMode ? (
+              <Link href="/analiz" className="inline-flex w-full items-center justify-center rounded-2xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-500">
+                Kendi analizini başlat →
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={onAnalyze}
+                disabled={loading || !ilan.trim() || !cv.trim()}
+                className="inline-flex w-full items-center justify-center rounded-2xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:bg-violet-200 disabled:text-violet-700 dark:disabled:bg-violet-900/60 dark:disabled:text-violet-200"
+              >
+                {loading ? "Analiz ediliyor..." : "Analiz Et"}
+              </button>
+            )}
 
             {retrying && loading ? (
               <div className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
@@ -703,19 +731,74 @@ export function AnalysisDashboard({
                         </span>
                       </div>
                     ) : null}
+                    <div className="mb-4 flex items-center gap-3 rounded-2xl border border-[#ECE8F7] bg-white px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-[#24203D]">
+                      <div className="flex-1">
+                        {isEditingTitle ? (
+                          <input
+                            value={draftTitle}
+                            onChange={(event) => setDraftTitle(event.target.value)}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter") {
+                                event.preventDefault();
+                                onTitleChange(draftTitle);
+                                setIsEditingTitle(false);
+                              }
+                              if (event.key === "Escape") {
+                                setDraftTitle(resultTitle || "Adsız ilan");
+                                setIsEditingTitle(false);
+                              }
+                            }}
+                            className="w-full rounded-xl border border-violet-200 bg-[#F7F5FF] px-3 py-2 text-lg font-bold text-[#1E1B4B] outline-none ring-0 focus:border-violet-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                            aria-label="Rapor başlığı"
+                          />
+                        ) : (
+                          <h2 className="text-xl font-black text-[#1E1B4B] dark:text-slate-100">{resultTitle || "Adsız ilan"}</h2>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (isEditingTitle) {
+                            onTitleChange(draftTitle);
+                            setDraftTitle(draftTitle.trim() || resultTitle || "Adsız ilan");
+                            setIsEditingTitle(false);
+                          } else {
+                            setDraftTitle(resultTitle || "Adsız ilan");
+                            setIsEditingTitle(true);
+                          }
+                        }}
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#EAE4F8] bg-[#F7F5FF] text-lg text-[#1E1B4B] transition hover:bg-violet-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                        aria-label="Rapor başlığını düzenle"
+                        title="Rapor başlığını düzenle"
+                      >
+                        ✎
+                      </button>
+                    </div>
+
                     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                       {summaryCards.map((card) => {
                         const palette = cardPalette[card.tone];
                         return (
                           <div key={card.title} className={`rounded-2xl border p-4 shadow-sm ${palette.wrap}`}>
                             <div className="flex items-center justify-between gap-3">
-                              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] opacity-80">{card.title}</p>
+                              <div className="flex items-center gap-2">
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] opacity-80">{card.title}</p>
+                                {card.title === "Uyum oranı" ? (
+                                  <span
+                                    className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-violet-200 text-[10px] font-bold text-violet-700 dark:bg-violet-900 dark:text-violet-200"
+                                    title="Bu oran, ilan gereksinimlerinin CV'nde ne kadar karşılandığının tahminidir. Gerçek ATS sistemleri genellikle tek bir yüzde puanı vermez; CV'yi metne çevirip anahtar kelimelerle arar."
+                                    aria-label="Uyum oranı açıklaması"
+                                  >
+                                    i
+                                  </span>
+                                ) : null}
+                              </div>
                               <div className={`inline-flex h-8 w-8 items-center justify-center rounded-xl ${palette.icon}`}>
                                 <MetricIcon kind={card.icon} />
                               </div>
                             </div>
 
-                            {card.title === "Uyum Puanı" ? (
+                            {card.title === "Uyum oranı" ? (
                               <>
                                 <div className="mt-4 flex justify-center">
                                   <CircularProgress
@@ -759,7 +842,7 @@ export function AnalysisDashboard({
                                 <th className="pb-3 pr-4 font-medium">Gereksinim</th>
                                 <th className="pb-3 pr-4 font-medium">Tür</th>
                                 <th className="pb-3 pr-4 font-medium">Durum</th>
-                                <th className="pb-3 font-medium">Kanit</th>
+                                <th className="pb-3 font-medium">Kanıt</th>
                               </tr>
                             </thead>
                             <tbody>

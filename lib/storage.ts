@@ -91,6 +91,14 @@ export function removeHistoryEntry(id: string): AnalysisHistoryEntry[] {
   return next;
 }
 
+export function updateHistoryEntry(id: string, updates: Partial<AnalysisHistoryEntry>): AnalysisHistoryEntry[] {
+  const next = getHistoryEntries().map((item) => (item.id === id ? { ...item, ...updates } : item));
+  if (!writeJson(HISTORY_STORAGE_KEY, next)) {
+    return [];
+  }
+  return next;
+}
+
 export function clearHistory(): void {
   removeKey(HISTORY_STORAGE_KEY);
 }
