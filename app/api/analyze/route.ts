@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-
+import { checkLimit, getClientId, limitMessage } from "@/lib/rate-limit";
 import { GoogleGenAI } from "@google/genai";
 import { NextResponse } from "next/server";
 
@@ -289,6 +289,11 @@ export async function POST(request: Request) {
 
     if (cachedEntry) {
       analysisCache.delete(cacheKey);
+    }
+    
+    const limit = await checkLimit("analyze", getClientId(request));
+    if (!limit.ok) {
+      return NextResponse.json({ error: limitMessage(limit, "analyze") }, { status: 429 });
     }
 
     const today = new Date().toLocaleDateString("tr-TR", {

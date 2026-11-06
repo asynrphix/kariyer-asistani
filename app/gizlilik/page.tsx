@@ -63,6 +63,10 @@ export default function PrivacyPage() {
             Site Vercel üzerinde barındırılır; barındırma sağlayıcısı IP adresi ve istek zamanı gibi standart erişim
             kayıtları tutabilir.
           </p>
+                    <p>
+            Kötüye kullanımı önlemek için günlük kullanım sınırı uygulanır. Bunun için IP adresinin kendisi değil, tek
+            yönlü özeti (SHA-256) en fazla bir gün boyunca bir sayaç olarak Upstash (Redis) üzerinde tutulur.
+          </p>
         </Bolum>
 
         <Bolum baslik="Tarayıcında ne tutulur?">
