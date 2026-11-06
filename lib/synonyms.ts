@@ -1,6 +1,7 @@
 export const SYNONYM_GROUPS = [
   ["ai agent", "yapay zeka ajanı", "yapay zeka ajani", "agent", "ajan"],
   ["yapay zeka", "ai", "artificial intelligence", "yapay zekâ"],
+  ["gömülü sistemler", "gömülü sistem", "embedded systems", "embedded software", "embedded", "gömülü yazılım"],
   ["test", "testing", "unit test", "birim test", "test etme", "test yazımı"],
   ["hata ayıklama", "debugging", "debug", "debug etme"],
   ["api entegrasyonu", "api integration", "api", "entegrasyon"],
@@ -44,17 +45,51 @@ export function getSynonymVariants(value: string): string[] {
   return Array.from(variants).filter(Boolean);
 }
 
-export function textMatchesConcept(text: string, concept: string) {
+export function findMatchingTermInText(text: string, concept: string) {
   const haystack = normalizeSynonymText(text);
-  const variants = getSynonymVariants(concept);
+  const normalizedConcept = normalizeSynonymText(concept);
+  const variants = new Set([normalizedConcept, ...getSynonymVariants(normalizedConcept)]);
 
-  if (!haystack || variants.length === 0) {
-    return false;
+  if (!haystack || !normalizedConcept || variants.size === 0) {
+    return null;
   }
 
-  return variants.some((variant) => {
-    if (!variant) return false;
-    if (haystack.includes(variant)) return true;
-    return haystack.split(/\s+/).includes(variant);
-  });
+  for (const variant of Array.from(variants)) {
+    if (!variant) continue;
+    if (haystack.includes(variant)) return variant;
+    if (haystack.split(/\s+/).includes(variant)) return variant;
+  }
+
+  return null;
+}
+
+export function textMatchesConcept(text: string, concept: string) {
+  return Boolean(findMatchingTermInText(text, concept));
+}
+
+export function mergeKeywordTerms(...entries: string[]) {
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  for (const entry of entries) {
+    if (!entry || !entry.trim()) continue;
+
+    const normalized = normalizeSynonymText(entry);
+    const variants = getSynonymVariants(normalized);
+
+    const isDuplicate = [...seen].some((existing) => {
+      const existingNormalized = normalizeSynonymText(existing);
+      return existingNormalized === normalized || variants.some((variant) => {
+        const candidate = normalizeSynonymText(existing);
+        return candidate === variant || candidate.includes(variant) || variant.includes(candidate);
+      });
+    });
+
+    if (isDuplicate) continue;
+
+    seen.add(entry.trim());
+    result.push(entry.trim());
+  }
+
+  return result;
 }

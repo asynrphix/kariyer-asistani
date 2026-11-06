@@ -1,6 +1,8 @@
-export type RequirementTur = "zorunlu" | "tercih";
+export type RequirementTur = "gorev" | "zorunlu" | "tercih";
 export type RequirementStatus = "var" | "kismen" | "yok";
 export type RequirementSource = "gorev" | "nitelik";
+
+export type ProofStrength = "guclu" | "zayif";
 
 export interface AnalysisRequirement {
   madde: string;
@@ -9,11 +11,13 @@ export interface AnalysisRequirement {
   kanit: string;
   kaynak?: RequirementSource;
   duzeltildi?: boolean;
+  kanitGucu?: ProofStrength;
 }
 
 export interface AnalysisKeyword {
   kelime: string;
   cvdeVar: boolean;
+  eslesenTerim?: string;
 }
 
 export interface IskurSummary {
@@ -42,6 +46,8 @@ export interface AnalysisResult {
   anahtarKelimeler: AnalysisKeyword[];
   onerilenCvMaddeleri: string[];
   onYazi: string;
+  firma?: string;
+  pozisyon?: string;
   iskurProfilOnerileri?: string[];
   ilanOzeti?: IskurSummary;
   cached?: boolean;
