@@ -3,7 +3,6 @@ import crypto from "node:crypto";
 import { GoogleGenAI } from "@google/genai";
 import { NextResponse } from "next/server";
 
-import { formatDate } from "@/lib/format";
 import { generateWithRetry, getUserFriendlyGeminiErrorMessage, GeminiRequestError } from "@/lib/gemini";
 import { getIskurGeminiText, parseIskurIlan } from "@/lib/iskur";
 import { cleanLinkedInJobText } from "@/lib/linkedin";
