@@ -1,6 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { NextResponse } from "next/server";
-
+import { checkLimit, getClientId, limitMessage } from "@/lib/rate-limit";
 import { generateWithRetry, GeminiRequestError, getUserFriendlyGeminiErrorMessage } from "@/lib/gemini";
 import { redactSensitiveInfo } from "@/lib/redact";
 
@@ -21,6 +21,10 @@ function normalizeMessages(messages: unknown[]) {
 }
 
 export async function POST(request: Request) {
+    const limit = await checkLimit("chat", getClientId(request));
+  if (!limit.ok) {
+    return Response.json({ error: limitMessage(limit, "chat") }, { status: 429 });
+  }
   try {
     const body = (await request.json().catch(() => null)) as {
       messages?: unknown[];

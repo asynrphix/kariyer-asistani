@@ -1,10 +1,15 @@
 import { GoogleGenAI } from "@google/genai";
 import { NextResponse } from "next/server";
+import { checkLimit, getClientId, limitMessage } from "@/lib/rate-limit";
 
 import { generateWithRetry, GeminiRequestError } from "@/lib/gemini";
 import { validateCvFile } from "@/lib/extract-cv";
 
 export async function POST(request: Request) {
+    const limit = await checkLimit("ocr", getClientId(request));
+  if (!limit.ok) {
+    return Response.json({ error: limitMessage(limit, "ocr") }, { status: 429 });
+  }
   try {
     const formData = await request.formData();
     const file = formData.get("file");
