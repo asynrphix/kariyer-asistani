@@ -684,7 +684,18 @@ export function AnalysisDashboard({
               >
                 {loading ? "Analiz ediliyor..." : "Analiz Et"}
               </button>
-            )}
+                          )}
+
+            {!isDemoMode ? (
+              <p className="text-[11px] leading-5 text-[#6B7280] dark:text-slate-400">
+                “Analiz Et”e basarak ilan ve CV metninin Google Gemini’ye gönderilmesini kabul edersin. Adını çıkararak
+                yapıştırabilirsin.{" "}
+                <Link href="/gizlilik" className="font-semibold text-violet-700 underline dark:text-violet-300">
+                  Gizlilik
+                </Link>
+              </p>
+            ) : null}
+           
 
             {retrying && loading ? (
               <div className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
